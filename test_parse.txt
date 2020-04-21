@@ -1,0 +1,476 @@
+1	Rain_Man	NN	13	nsubj	("Rain_Man", "Film", "Rain Man", 1)
+2	,	,	1	punct	None
+3	a	DT	4	det	None
+4	film	NN	1	appos	None
+5	that	WDT	6	nsubj	None
+6	won	VBD	4	relcl	None
+7	4	CD	8	nummod	None
+8	Oscars	NNS	6	dobj	None
+9	including	VBG	8	prep	None
+10	Best	NNP	11	compound	None
+11	Picture	NNP	9	pobj	None
+12	,	,	1	punct	None
+13	depicts	VBZ	0	root	None
+14	a	DT	15	det	None
+15	character	NN	13	dobj	None
+16	with	IN	15	prep	None
+17	Autism_Society_of_America	NNP	16	pobj	("Autism_Society_of_America", "Organisation", "autism", 17)
+18	who	WP	19	nsubj	None
+19	has	VBZ	15	relcl	None
+20	incredible	JJ	21	amod	None
+21	talents	NNS	19	dobj	None
+22	and	CC	21	cc	None
+23	abilities	NNS	21	conj	None
+24	.	.	13	punct	None
+
+1	Most	JJS	2	amod	None
+2	children	NNS	5	nsubj	None
+3	with	IN	2	prep	None
+4	Autism	NNP	3	pobj	("Autism", "Disease or medical condition", "autism", 4)
+5	acquire	VB	0	root	None
+6	Language_acquisition	NN	5	dobj	("Language_acquisition", "Field Of Study", "language", 6)
+7	by	IN	5	prep	None
+8	age	NN	7	pobj	None
+9	five	CD	8	nummod	None
+10	or	CC	9	cc	None
+11	younger	JJR	5	advmod	None
+12	,	,	5	punct	None
+13	though	IN	17	mark	None
+14	a	DT	15	quantmod	None
+15	few	JJ	17	nsubj	None
+16	have	VBP	17	aux	None
+17	developed	VBN	5	advcl	None
+18	Communication	NNP	17	dobj	("Communication", "Field Of Study", "communication skills", 18)
+19	in	IN	17	prep	None
+20	later	RB	21	amod	None
+21	years	NNS	19	pobj	None
+22	.	.	5	punct	None
+
+1	The	DT	2	det	None
+2	Victor_of_Aveyron	NNP	11	nsubj	("Victor_of_Aveyron", "Person", "Wild Boy of Aveyron", 2)
+3	,	,	2	punct	None
+4	a	DT	6	det	None
+5	feral	JJ	6	amod	None
+6	Child_development_stages	NNS	2	appos	("Child_development_stages", "unknown", "child", 6)
+7	caught	VBN	6	acl	None
+8	in	IN	7	prep	None
+9	1798	CD	8	pobj	None
+10	,	,	11	punct	None
+11	showed	VBD	21	ccomp	None
+12	several	JJ	13	amod	None
+13	signs	NNS	11	dobj	None
+14	of	IN	13	prep	None
+15	Autism	NNP	14	pobj	("Autism", "Disease or medical condition", "autism", 15)
+16	;	:	21	punct	None
+17	the	DT	19	det	None
+18	medical	JJ	19	amod	None
+19	student	NN	21	nsubj	None
+20	Jean_Marc_Gaspard_Itard	NNP	21	nsubj	("Jean_Marc_Gaspard_Itard", "Person", "Jean Itard", 20)
+21	treated	VBD	0	root	None
+22	Jean_Marc_Gaspard_Itard	NNP	21	dobj	("Jean_Marc_Gaspard_Itard", "Person", "him", 22)
+23	with	IN	21	prep	None
+24	a	DT	26	det	None
+25	behavioral	JJ	26	amod	None
+26	program	NN	23	pobj	None
+27	designed	VBN	26	acl	None
+28	to	TO	29	aux	None
+29	help	VB	27	xcomp	None
+30	Jean_Marc_Gaspard_Itard	NNP	31	nsubj	("Jean_Marc_Gaspard_Itard", "Person", "him", 30)
+31	form	VB	29	ccomp	None
+32	social	JJ	33	amod	None
+33	attachments	NNS	31	dobj	None
+34	and	CC	31	cc	None
+35	to	TO	36	aux	None
+36	induce	VB	29	advcl	None
+37	speech	NN	36	dobj	None
+38	via	IN	36	prep	None
+39	imitation	NN	38	pobj	None
+40	.	.	21	punct	None
+
+1	The	DT	3	det	None
+2	New_Latin	JJ	3	amod	("New_Latin", "Language Dialect", "New Latin", 2)
+3	word	NN	4	compound	None
+4	autismus	NN	6	nsubjpass	None
+5	was	VBD	6	auxpass	None
+6	coined	VBN	0	root	None
+7	by	IN	6	agent	None
+8	the	DT	10	det	None
+9	Switzerland	NNP	10	compound	("Switzerland", "Location", "Swiss", 9)
+10	psychiatrist	NN	7	pobj	None
+11	Eugen_Bleuler	NNP	10	appos	("Eugen_Bleuler", "Person", "Eugen Bleuler", 11)
+12	in	IN	6	prep	None
+13	1910	CD	12	pobj	None
+14	as	IN	17	mark	None
+15	Eugen_Bleuler	NNP	17	nsubj	("Eugen_Bleuler", "Person", "he", 15)
+16	was	VBD	17	aux	None
+17	defining	VBG	6	advcl	None
+18	symptoms	NNS	17	dobj	None
+19	of	IN	18	prep	None
+20	Schizophrenia	NNP	19	pobj	("Schizophrenia", "Disease or medical condition", "schizophrenia", 20)
+21	.	.	6	punct	None
+
+1	Hans_Asperger	NN	3	nsubj	("Hans_Asperger", "Person", "Asperger", 1)
+2	was	VBD	3	aux	None
+3	investigating	VBG	0	root	None
+4	an	DT	5	det	None
+5	ASD	NNP	3	dobj	None
+6	now	RB	7	advmod	None
+7	known	VBN	5	acl	None
+8	as	IN	7	prep	None
+9	Asperger_syndrome	DT	8	pobj	("Asperger_syndrome", "Disease or medical condition", "Asperger syndrome", 9)
+10	,	,	3	punct	None
+11	though	RB	16	mark	None
+12	for	IN	16	prep	None
+13	various	JJ	14	amod	None
+14	reasons	NNS	12	pobj	None
+15	Asperger_syndrome	DT	16	nsubj	("Asperger_syndrome", "Disease or medical condition", "it", 15)
+16	was	VBD	19	auxpass	None
+17	not	RB	19	neg	None
+18	widely	RB	19	advmod	None
+19	recognized	VBN	3	conj	None
+20	as	IN	19	prep	None
+21	a	DT	23	det	None
+22	separate	JJ	23	amod	None
+23	diagnosis	NN	20	pobj	None
+24	until	IN	19	prep	None
+25	1981	CD	24	pobj	None
+26	.	.	3	punct	None
+
+1	After	IN	13	prep	None
+2	two	CD	4	nummod	None
+3	early	JJ	4	amod	None
+4	novels	NNS	1	pobj	None
+5	that	WDT	6	nsubj	None
+6	were	VBD	4	relcl	None
+7	initially	RB	8	advmod	None
+8	unsuccessful	JJ	6	acomp	None
+9	in	IN	8	prep	None
+10	United_States_of_America	NNP	9	pobj	("United_States_of_America", "Location", "America", 10)
+11	,	,	13	punct	None
+12	Ayn_Rand	NNP	13	nsubj	("Ayn_Rand", "Person", "she", 12)
+13	achieved	VBD	0	root	None
+14	fame	NN	13	dobj	None
+15	with	IN	13	prep	None
+16	Ayn_Rand	$	17	nmod	("Ayn_Rand", "Person", "her", 16)
+17	1943	CD	18	nummod	None
+18	novel	NN	15	pobj	None
+19	,	,	18	punct	None
+20	The	DT	21	det	None
+21	The_Fountainhead	NNP	18	appos	("The_Fountainhead_(Fiction_Book)", "Written Work", "Fountainhead", 21)
+22	.	.	13	punct	None
+
+1	Literary_criticism	NN	2	nsubj	("Literary_criticism", "Field Of Study", "Literary critics", 1)
+2	received	VBD	0	root	None
+3	Ayn_Rand	NNP	5	poss	("Ayn_Rand", "Person", "Rand", 3)
+4	's	POS	3	case	None
+5	fiction	NN	2	dobj	None
+6	with	IN	2	prep	None
+7	mixed	JJ	8	amod	None
+8	reviews	NNS	6	pobj	None
+9	,	,	8	punct	None
+10	and	CC	8	cc	None
+11	academia	NN	8	conj	None
+12	generally	RB	13	advmod	None
+13	ignored	VBN	2	conj	None
+14	or	CC	13	cc	None
+15	rejected	VBN	13	conj	None
+16	Ayn_Rand	JJ	17	amod	("Ayn_Rand", "Person", "her", 16)
+17	philosophy	NN	15	dobj	None
+18	,	,	15	punct	None
+19	though	IN	23	mark	None
+20	academic	JJ	21	amod	None
+21	interest	NN	23	nsubj	None
+22	has	VBZ	23	aux	None
+23	increased	VBN	15	advcl	None
+24	in	IN	23	prep	None
+25	recent	JJ	26	amod	None
+26	decades	NNS	24	pobj	None
+27	.	.	2	punct	None
+
+1	Zinovy_Zakharovich_Rosenbaum	NN	2	compound	("Zinovy_Zakharovich_Rosenbaum", "Person", "Zinovy", 1)
+2	Zinovy_Zakharovich_Rosenbaum	NN	3	nsubj	("Zinovy_Zakharovich_Rosenbaum", "Person", "Rosenbaum", 2)
+3	was	VBD	0	root	None
+4	a	DT	6	det	None
+5	successful	JJ	6	amod	None
+6	Pharmacist	NN	3	attr	("Pharmacist", "Profession", "pharmacist", 6)
+7	and	CC	6	cc	None
+8	businessman	NN	6	conj	None
+9	,	,	3	punct	None
+10	eventually	RB	11	advmod	None
+11	owning	VBG	3	advcl	None
+12	a	DT	13	det	None
+13	pharmacy	NN	11	dobj	None
+14	and	CC	13	cc	None
+15	the	DT	16	det	None
+16	building	NN	13	conj	None
+17	in	IN	21	prep	None
+18	which	WDT	17	pobj	None
+19	Pharmacist	NNP	21	nsubjpass	("Pharmacist", "Profession", "it", 19)
+20	was	VBD	21	auxpass	None
+21	located	VBN	16	relcl	None
+22	.	.	3	punct	None
+
+1	Ayn_Rand	NN	2	nsubj	("Ayn_Rand", "Person", "She", 1)
+2	was	VBD	0	root	None
+3	twelve	CD	2	attr	None
+4	at	IN	2	prep	None
+5	the	DT	6	det	None
+6	time	NN	4	pobj	None
+7	of	IN	6	prep	None
+8	the	DT	9	det	None
+9	February_Revolution	NN	7	pobj	("February_Revolution", "Event", "February Revolution", 9)
+10	of	IN	9	prep	None
+11	1917	CD	10	pobj	None
+12	,	,	2	punct	None
+13	during	IN	16	prep	None
+14	which	WDT	13	pobj	None
+15	Ayn_Rand	NNP	16	nsubj	("Ayn_Rand", "Person", "she", 15)
+16	favored	VBD	2	advcl	None
+17	Alexander_Kerensky	NNP	16	dobj	("Alexander_Kerensky", "Person", "Alexander Kerensky", 17)
+18	over	IN	16	prep	None
+19	Tsar	NNP	20	compound	("Tsar", "Government Office or Title", "Tsar", 19)
+20	Nicholas_II_of_Russia	NNP	18	pobj	("Nicholas_II_of_Russia", "Person", "Nicholas II", 20)
+21	.	.	2	punct	None
+
+1	Thomas_Jay_Oord	NNP	2	nsubj	("Thomas_Jay_Oord", "Person", "Oord", 1)
+2	defines	VBZ	0	root	None
+3	Altruism	NNP	2	dobj	("Altruism", "", "altruism", 3)
+4	as	IN	2	prep	None
+5	acting	VBG	4	pcomp	None
+6	for	IN	5	prep	None
+7	the	DT	8	det	None
+8	other	JJ	10	poss	None
+9	's	POS	8	case	None
+10	good	JJ	6	pobj	None
+11	,	,	2	punct	None
+12	and	CC	2	cc	None
+13	he	PRP	14	nsubj	None
+14	agrees	VBZ	2	conj	None
+15	with	IN	14	prep	None
+16	feminists	NNS	15	pobj	None
+17	who	WP	18	nsubj	None
+18	note	VBP	16	relcl	None
+19	that	IN	22	mark	None
+20	sometimes	RB	22	advmod	None
+21	love	NN	22	nsubj	None
+22	requires	VBZ	18	ccomp	None
+23	acting	VBG	22	xcomp	None
+24	for	IN	23	prep	None
+25	one	PRP	28	poss	None
+26	's	POS	25	case	None
+27	own	JJ	28	amod	None
+28	good	NN	24	pobj	None
+29	when	WRB	34	advmod	None
+30	the	DT	31	det	None
+31	other	JJ	33	poss	None
+32	's	POS	31	case	None
+33	demands	NNS	34	nsubj	None
+34	undermine	VBP	23	advcl	None
+35	overall	JJ	36	amod	None
+36	well-being	NN	34	dobj	None
+37	.	.	14	punct	None
+
+1	Jainism	NNP	2	nsubj	("Jainism", "Religion", "Jainism", 1)
+2	emphasizes	VBZ	0	root	None
+3	the	DT	4	det	None
+4	equality	NN	2	dobj	None
+5	of	IN	4	prep	None
+6	all	DT	7	det	None
+7	Quality_of_life	NN	5	pobj	("Quality_of_life", "Media genre", "life", 7)
+8	,	,	2	punct	None
+9	advocating	VBG	2	advcl	None
+10	harmlessness	NN	9	dobj	None
+11	towards	IN	10	prep	None
+12	all	DT	11	pobj	None
+13	,	,	9	punct	None
+14	whether	IN	17	mark	None
+15	the	DT	16	det	None
+16	creatures	NNS	17	nsubj	None
+17	are	VBP	2	ccomp	None
+18	great	JJ	17	acomp	None
+19	or	CC	18	cc	None
+20	small	JJ	18	conj	None
+21	.	.	2	punct	None
+
+1	Psychological_egoism	NN	2	compound	("Psychological_egoism", "Theory or theoretical idea", "Psychological", 1)
+2	Altruism	NN	4	nsubjpass	("Altruism", "", "altruism", 2)
+3	is	VBZ	4	auxpass	None
+4	contrasted	VBN	0	root	None
+5	with	IN	4	prep	None
+6	Psychological_egoism	NN	7	compound	("Psychological_egoism", "Theory or theoretical idea", "psychological", 6)
+7	Psychological_egoism	NN	5	pobj	("Psychological_egoism", "Theory or theoretical idea", "egoism", 7)
+8	,	,	7	punct	None
+9	which	WDT	10	nsubj	None
+10	refers	VBZ	7	relcl	None
+11	to	IN	10	prep	None
+12	the	DT	13	det	None
+13	motivation	NN	11	pobj	None
+14	to	TO	15	aux	None
+15	increase	VB	10	advcl	None
+16	one	CD	19	nummod	None
+17	’s	NNP	19	nmod	None
+18	own	JJ	19	amod	None
+19	welfare	NN	15	dobj	None
+20	.	.	4	punct	None
+
+1	In	IN	10	prep	None
+2	the	DT	3	det	None
+3	United_States_of_America	NNP	1	pobj	("United_States_of_America", "Location", "United States", 3)
+4	,	,	10	punct	None
+5	a	DT	7	det	None
+6	scientific	JJ	7	amod	None
+7	revolution	NN	10	nsubj	None
+8	in	IN	7	prep	None
+9	Agriculture	NNP	8	pobj	("Agriculture", "Industry", "agriculture", 9)
+10	began	VBD	0	root	None
+11	with	IN	10	prep	None
+12	the	DT	14	det	None
+13	Hatch	NNP	14	compound	None
+14	Act	NNP	11	pobj	None
+15	of	IN	14	prep	None
+16	1887	CD	15	pobj	None
+17	,	,	14	punct	None
+18	which	WDT	19	nsubj	None
+19	used	VBD	14	relcl	None
+20	the	DT	21	det	None
+21	term	NN	19	dobj	None
+22	"	''	24	punct	None
+23	Agricultural_science	NN	24	compound	("Agricultural_science", "Field Of Study", "agricultural", 23)
+24	Agricultural_science	NN	19	oprd	("Agricultural_science", "Field Of Study", "science", 24)
+25	"	''	24	punct	None
+26	.	.	10	punct	None
+
+1	Political	JJ	2	amod	None
+2	scientist	NN	3	compound	None
+3	Charles_A_Murray	NNP	12	nsubj	("Charles_A._Murray", "Person", "Charles Murray", 3)
+4	,	,	12	punct	None
+5	while	IN	6	mark	None
+6	praising	VBG	12	advcl	None
+7	Ayn_Rand	NNP	10	poss	("Ayn_Rand", "Person", "Rand", 7)
+8	's	POS	7	case	None
+9	The_Literary_Encyclopedia	NNP	10	compound	("The_Literary_Encyclopedia", "unknown", "literary", 9)
+10	accomplishments	NNS	6	dobj	None
+11	,	,	12	punct	None
+12	criticizes	VBZ	0	root	None
+13	Ayn_Rand	NNP	14	compound	("Ayn_Rand", "Person", "her", 13)
+14	claim	NN	12	dobj	None
+15	that	IN	22	mark	None
+16	Ayn_Rand	NNP	20	nmod	("Ayn_Rand", "Person", "her", 16)
+17	only	RB	20	advmod	None
+18	"	''	20	punct	None
+19	Pacific_Philosophical_Quarterly	JJ	20	amod	("Pacific_Philosophical_Quarterly", "Employer", "philosophical", 19)
+20	debt	NN	22	dative	None
+21	"	''	20	punct	None
+22	was	VBD	14	acl	None
+23	to	IN	22	prep	None
+24	Aristotle	NNP	23	pobj	("Aristotle", "Person", "Aristotle", 24)
+25	,	,	12	punct	None
+26	instead	RB	27	advmod	None
+27	asserting	VBG	12	advcl	None
+28	that	IN	31	mark	None
+29	Ayn_Rand	NNP	30	compound	("Ayn_Rand", "Person", "her", 29)
+30	ideas	NNS	31	nsubj	None
+31	were	VBD	27	ccomp	None
+32	derivative	JJ	31	acomp	None
+33	of	IN	32	prep	None
+34	previous	JJ	35	amod	None
+35	thinkers	NNS	33	pobj	None
+36	such	JJ	37	amod	None
+37	as	IN	35	prep	None
+38	John_Locke	NNP	37	pobj	("John_Locke", "Person", "John Locke", 38)
+39	and	CC	38	cc	None
+40	Friedrich_Nietzsche	NNP	38	conj	("Friedrich_Nietzsche", "Person", "Friedrich Nietzsche", 40)
+41	.	.	12	punct	None
+
+1	Earth	NNP	2	nsubj	("Earth", "Celestial Object", "It", 1)
+2	is	VBZ	0	root	None
+3	the	DT	4	det	None
+4	basis	NN	2	attr	None
+5	for	IN	4	prep	None
+6	Coordinated_Universal_Time	NNP	5	pobj	("Coordinated_Universal_Time", "Time Zone", "Coordinated Universal Time", 6)
+7	,	,	6	punct	None
+8	which	WDT	10	nsubjpass	None
+9	is	VBZ	10	auxpass	None
+10	used	VBN	4	relcl	None
+11	for	IN	10	prep	None
+12	civil	JJ	13	amod	None
+13	timekeeping	NN	11	pobj	None
+14	all	RB	15	advmod	None
+15	over	IN	10	prep	None
+16	the	DT	17	det	None
+17	Earth	NNP	19	poss	("Earth", "Celestial Object", "Earth", 17)
+18	's	POS	17	case	None
+19	surface	NN	15	pobj	None
+20	,	,	10	punct	None
+21	and	CC	2	cc	None
+22	for	IN	28	prep	None
+23	Terrestrial	NNP	24	compound	None
+24	Coordinated_Universal_Time	NNP	22	pobj	("Coordinated_Universal_Time", "Time Zone", "Time", 24)
+25	,	,	24	punct	None
+26	which	WDT	28	nsubjpass	None
+27	is	VBZ	28	auxpass	None
+28	used	VBN	2	conj	None
+29	for	IN	28	prep	None
+30	astronomical	JJ	31	amod	None
+31	calculations	NNS	29	pobj	None
+32	.	.	2	punct	None
+
+1	It	PRP	2	nsubj	None
+2	is	VBZ	2	root	None
+3	her	PRP$	4	poss	("Alice", "Person", "her", 3)
+4	book	NN	2	attr	None
+5	.	.	2	punct	None
+
+1	He	PRP	2	nsubj	("Bob", "Person", "He", 1)
+2	gave	VBD	2	root	None
+3	it	PRP	2	dobj	None
+4	to	IN	2	prep	None
+5	her	PRP	4	pobj	("Alice", "Person", "her", 5)
+6	.	.	2	punct	None
+
+1	Alice	NNP	2	nsubj	("Alice", "Person", "Alice", 1)
+2	wrote	VBD	2	root	None
+3	her	PRP$	5	poss	("Alice", "Person", "her", 3)
+4	first	JJ	5	amod	None
+5	book	NN	2	dobj	None
+6	in	IN	2	prep	None
+7	1992	CD	6	pobj	None
+8	.	.	2	punct	None
+
+1	He	PRP	2	nsubj	("Charly", "Person", "He", 1)
+2	was	VBD	2	root	None
+3	his	PRP$	4	poss	("Bob", "Person", "his", 3)
+4	friend	NN	2	attr	None
+5	.	.	2	punct	None
+
+1	He	PRP	2	nsubj	("Charly", "Person", "He", 1)
+2	wrote	VBD	2	root	None
+3	his	PRP$	5	poss	("Charly", "Person", "his", 3)
+4	first	JJ	5	amod	None
+5	book	NN	2	dobj	None
+6	in	IN	5	prep	None
+7	1992	CD	6	pobj	None
+8	.	.	2	punct	None
+
+1	He	PRP	2	nsubj	("Charly", "Person", "He", 1)
+2	was	VBD	2	root	None
+3	happy	JJ	2	acomp	None
+4	with	IN	3	prep	None
+5	himself	PRP	4	pobj	("Charly", "Person", "himself", 5)
+6	.	.	2	punct	None
+
+1	Potsdam	NNP	2	nsubj	("Potsdam", "Location", "Potsdam", 1)
+2	is	VBZ	2	root	None
+3	a	DT	4	det	None
+4	city	NN	2	attr	None
+5	near	IN	4	prep	None
+6	Berlin	NNP	5	pobj	("Berlin", "Location", "Berlin", 6)
+7	.	.	2	punct	None
+
+1	Indian_philosophy	NNP	2	nsubj	("Indian_philosophy", "Field Of Study", "Indian philosophies", 1)
+2	are	VBP	2	root	None
+3	an	DT	5	det	None
+4	important	JJ	5	amod	None
+5	topic	NN	2	attr	None
+6	.	.	2	punct	None
+
