@@ -249,7 +249,7 @@ class FilterQuestions:
             self.update_connection_map(ent1, ent2, int(res))  # int(False) == 0; int(True) == 1
         return res
 
-    def filter_missing_context(self, question, entities, answer_entities):
+    def filter_missing_context(self, question, answer, entities, answer_entities):
         """Filters out questions that are likely to have a MISSING_CONTEXT
         problem.
 
@@ -261,6 +261,7 @@ class FilterQuestions:
 
         Args:
             question (str): the original question
+            answer (str): the original answer
             entities (list): entities in the question
             answer_entities (list): entities in the answer
 
@@ -268,7 +269,7 @@ class FilterQuestions:
             bool: True iff question is filtered out
         """
         # The tokenized question with entities masked as [x]
-        tokens = " ".join(mask_entities(question))
+        tokens = mask_entities(question).split(" ")
         context_words = ["this", "there", "then", "these", "they", "he", "she"]
         for t in tokens:
             # Filter questions that contain words that refer to a context which
@@ -276,17 +277,17 @@ class FilterQuestions:
             if t.lower() in context_words:
                 return True
 
-        ent_names = [e.name for e in entities]
-        answer_ent_names = [e.name for e in answer_entities]
+        all_entities = entities + answer_entities
+        all_ent_names = [e.name for e in all_entities]
         pronouns = PRONOUNS.union(OBJ_PRONOUNS)
-        for i, ent in enumerate(entities):
-            the_before_entity = "the " + ent.to_entity_format() in question
-            the_before_entity = the_before_entity or "The " + ent.to_entity_format() in question
-            other_ent_names = ent_names[:i] + ent_names[i+1:] + answer_ent_names
+        for i, ent in enumerate(all_entities):
+            the_before_entity = "the " + ent.to_entity_format() in question + answer
+            the_before_entity = the_before_entity or "The " + ent.to_entity_format() in question + answer
+            other_ent_names = all_ent_names[:i] + all_ent_names[i+1:]
             lem_original = self.lemmatizer.lemmatize(ent.original.lower())
-            lem_name = self.lemmatizer.lemmatize(ent.name.lower())
-            if not self.regard_entity_name and ent.original.islower() and lem_original != lem_name \
-                    and ent.name not in other_ent_names and (the_before_entity or ent.original.lower() in pronouns):
+            lem_name = self.lemmatizer.lemmatize(ent.clean_name().lower())
+            if not self.regard_entity_name and lem_original != lem_name and ent.name not in other_ent_names and \
+                    ((the_before_entity and ent.original.islower()) or ent.original.lower() in pronouns):
                 return True
         return False
 
@@ -510,7 +511,7 @@ class FilterQuestions:
             logger.debug("filter contains answer")
             return Filter.CONTAINS_ANSWER
 
-        if self.filter_missing_context(question, entities, answer_entities):
+        if self.filter_missing_context(question, answer, entities, answer_entities):
             logger.debug("filter missing context")
             return Filter.MISSING_CONTEXT
 
