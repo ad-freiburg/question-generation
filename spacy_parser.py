@@ -97,8 +97,8 @@ def to_conll_6(doc, entities):
             if num_tokens in entity_by_address:
                 entity = entity_by_address[num_tokens]
                 if str(word) != entity.parseable_name() and str(word) != entity.original:
-                    logger.info("Entity assignment went wrong. Entity: %s, Word: %s\n\tIn sentence: %s"
-                                % (entity.parseable_name(), word, doc))
+                    logger.debug("Entity assignment went wrong. Entity: %s, Word: %s\n\tIn sentence: %s"
+                                 % (entity.parseable_name(), word, doc))
                     return
                 entity = entity_by_address[num_tokens]
 
@@ -112,9 +112,8 @@ def to_conll_6(doc, entities):
 
 
 class SpacyParser:
-    def __init__(self, regard_entity_name):
+    def __init__(self):
         logger.info("Initializing spaCy parser...")
-        self.regard_entity_name = regard_entity_name
         self.nlp = en_core_web_md.load()
         self.init_tokenizer()
 
@@ -149,8 +148,7 @@ class SpacyParser:
                 error occurred
         """
         logger.debug("%s" % line)
-        sent, entities = clean_sentence(line, use_singleword_originals=True,
-                                        regard_entity_name=self.regard_entity_name)
+        sent, entities = clean_sentence(line, use_singleword_originals=True, remove_article=False)
 
         # Prevent SpacyParser from running out of memory
         length = len(sent.split())
@@ -179,7 +177,7 @@ def main(args):
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
-    dep_parser = SpacyParser(args.regard_entity_name)
+    dep_parser = SpacyParser()
     num_lines = 0
     num_errors = 0
     start = time.time()
@@ -211,7 +209,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--debug", default=False, action="store_true",
                         help="Print additional information for debugging.")
-    parser.add_argument("--regard_entity_name", default=False, action="store_true",
-                        help="Set to true if the entity name should be regarded instead of the original word in the "
-                             "final sentence")
     main(parser.parse_args())

@@ -20,12 +20,12 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(sent, "Paris is in France , not in Germany .")
 
         s = "The [Actrius|Film|film] first aired in the [Paris_(France)|Location|city] ."
-        sent, ents = clean_sentence(s, regard_entity_name=True)
+        sent, ents = clean_sentence(s, remove_article=True)
         self.assertEqual(sent, "Actrius first aired in Paris .")
         self.assertEqual(str(ents[0]), '("Actrius", "Film", "film", 1)')
         self.assertEqual(str(ents[1]), '("Paris_(France)", "Location", "city", 5)')
 
-        sent, ents = clean_sentence(s, use_singleword_originals=True, regard_entity_name=False)
+        sent, ents = clean_sentence(s, use_singleword_originals=True, remove_article=False)
         self.assertEqual(sent, "The film first aired in the city .")
         self.assertEqual(str(ents[0]), '("Actrius", "Film", "film", 2)')
         self.assertEqual(str(ents[1]), '("Paris_(France)", "Location", "city", 7)')

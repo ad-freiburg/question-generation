@@ -11,7 +11,7 @@ import config
 from entity import Entity
 from collections import defaultdict
 from enum import Enum
-from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.stem import SnowballStemmer
 
 
 # Set up the logger
@@ -184,13 +184,14 @@ class Filter(Enum):
     CONTAINS_ANSWER = 9
     TWO_ENTITIES = 10
     NO_CONNECTION = 11
+    UNRELIABLE_NER = 12
 
 
 class FilterQuestions:
     """Filters questions according to various filter criteria.
     """
     def __init__(self, max_tokens, wikidata_entities, regard_entity_name):
-        self.lemmatizer = WordNetLemmatizer()
+        self.stemmer = SnowballStemmer('english')
         self.name_to_mid = dict()
         if not wikidata_entities:
             self.read_name_to_mid(NAME_TO_MID_PATH)
@@ -284,10 +285,33 @@ class FilterQuestions:
             the_before_entity = "the " + ent.to_entity_format() in question + answer
             the_before_entity = the_before_entity or "The " + ent.to_entity_format() in question + answer
             other_ent_names = all_ent_names[:i] + all_ent_names[i+1:]
-            lem_original = self.lemmatizer.lemmatize(ent.original.lower())
-            lem_name = self.lemmatizer.lemmatize(ent.clean_name().lower())
-            if not self.regard_entity_name and lem_original != lem_name and ent.name not in other_ent_names and \
-                    ((the_before_entity and ent.original.islower()) or ent.original.lower() in pronouns):
+            stem_name = "".join([self.stemmer.stem(t) for t in ent.clean_name().lower().split(" ")])
+            stem_original = "".join([self.stemmer.stem(t) for t in ent.original.lower().split(" ")])
+            if not self.regard_entity_name and stem_original != stem_name and ent.name not in other_ent_names and \
+                    ((the_before_entity and ent.original.islower()) or ent.original.lower() in ALL_PRONOUNS):
+                return True
+        return False
+
+    def filter_ner(self, entities, answer_entities):
+        """Filter out questions which are likely to contain entities that were
+        recognized erroneously.
+
+        Args:
+            entities (list): entities in the question
+            answer_entities (list): entities in the answer
+
+        Returns:
+            bool: True iff question is filtered out
+        """
+        all_entities = entities + answer_entities
+        for ent in all_entities:
+            stem_name = "".join([self.stemmer.stem(t) for t in ent.clean_name().lower().split(" ")])
+            stem_original = "".join([self.stemmer.stem(t) for t in ent.original.lower().split(" ")])
+            # The location-condition is to keep common cases like "the [Britain|country|British] army"
+            # TODO: do I need the islower()?
+            if not ent.original.islower() and stem_name != stem_original and \
+                    (ent.category != "Location" or len(ent.clean_name().split(" ")) != len(ent.original.split(" "))):
+                # for al in ent.aliases if stem(al) != stem_original:
                 return True
         return False
 
@@ -368,8 +392,7 @@ class FilterQuestions:
                 return True
         return False
 
-    @staticmethod
-    def filter_contains_answer(entities, answer_entities):
+    def filter_contains_answer(self, entities, answer_entities):
         """Filters out questions that contain their own answer.
 
         Args:
@@ -380,7 +403,8 @@ class FilterQuestions:
             bool: True iff question is filtered out
         """
         for ent in entities:
-            if ent.name in [ae.name for ae in answer_entities] and ent.original not in ALL_PRONOUNS:
+            if ent.name in [ae.name for ae in answer_entities] and \
+                    (ent.original not in ALL_PRONOUNS or self.regard_entity_name):
                 return True
         return False
 
@@ -492,6 +516,7 @@ class FilterQuestions:
         else:
             logger.warning("Weird question format: %d tabs found." % line.count("\t"))
             return Filter.ERROR
+
         answer_entities = Entity.get_entities(answer)
         entities = Entity.get_entities(question)
 
@@ -519,6 +544,9 @@ class FilterQuestions:
             logger.debug("filter max tokens")
             return Filter.MAX_TOKENS
 
+        if self.regard_entity_name and self.filter_ner(entities, answer_entities):
+            return Filter.UNRELIABLE_NER
+
         if False and self.regard_entity_name and self.filter_gt_two_entities(entities):
             logger.debug("filter > 2 entities")
             return Filter.TWO_ENTITIES
@@ -531,7 +559,7 @@ class FilterQuestions:
             logger.debug("filter lowercase")
             return Filter.LOWERCASE
 
-        if self.regard_entity_name and self.filter_entity_connection(entities, answer_entities):
+        if False and self.regard_entity_name and self.filter_entity_connection(entities, answer_entities):
             logger.debug("filter no connection")
             return Filter.NO_CONNECTION
 

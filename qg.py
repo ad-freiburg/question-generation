@@ -9,6 +9,7 @@ import argparse
 import config
 from collections import defaultdict
 from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.stem import SnowballStemmer
 from nltk.corpus import stopwords
 from entity_dependency_graph import EntityDependencyGraph
 from entity import Entity
@@ -26,10 +27,14 @@ BOLD = '\033[1m'
 NAME_TO_TYPE_IDS_PATH = config.QG_MAPPINGS + "qg_name_to_type_ids.txt"
 QG_TYPES_PATH = config.QG_MAPPINGS + "qg_types.txt"
 
-MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November",
-          "December"]
-CONTEXT_WORDS = ["also", "then", "however", "instead", "therefore", "otherwise", "immediately", "later", "even"]
-WHO_CATEGORIES = ["Person", "Fictional Character", "Musical Artist", "Musical Group", "Sports Team"]
+MONTHS = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November",
+          "December"}
+CONTEXT_WORDS = {"also", "then", "however", "instead", "therefore", "otherwise", "immediately", "later", "even"}
+WHO_CATEGORIES = {"Person", "Fictional Character", "Musical Artist", "Musical Group", "Sports Team"}
+PRONOUNS = {"she", "he", "it", "they"}
+POSS_PRONOUNS = {"her", "his", "its", "their"}
+OBJ_PRONOUNS = {"her", "him", "it", "them"}
+ALL_PRONOUNS = PRONOUNS.union(POSS_PRONOUNS).union(OBJ_PRONOUNS)
 
 
 def get_dependency_graph(parse_string):
@@ -382,8 +387,9 @@ class QuestionGenerator:
     """
     def __init__(self, parse_input, regard_entity_name):
         if parse_input:
-            self.spacy_parser = SpacyParser(regard_entity_name)
+            self.spacy_parser = SpacyParser()
         self.lemmatizer = WordNetLemmatizer()
+        self.stemmer = SnowballStemmer('english')
         self.name_to_type_ids = defaultdict(list)
         self.id_to_type = list()
         self.stopwords = set(stopwords.words('english'))
@@ -556,6 +562,35 @@ class QuestionGenerator:
 
         return q_list
 
+    def remove_entity_mentions(self, string):
+        """Remove entity mentions for entities where entity recognition is
+        not reliable.
+
+        E.g. "The [World War II|Event|world]".
+        Returns an empty string if missing context is likely to be introduced
+        by removal of the problematic entity mentions.
+
+        Args:
+            string (str): the question or answer string
+
+        Returns:
+            str: input string with certain entity mentions removed
+        """
+        entities = Entity.get_entities(string)
+        ent_names = [e.name for e in entities]
+        for i, ent in enumerate(entities):
+            stem_name = "".join([self.stemmer.stem(t) for t in ent.clean_name().lower().split(" ")])
+            stem_original = "".join([self.stemmer.stem(t) for t in ent.original.lower().split(" ")])
+            if ent.original.islower() and ent.original.lower() not in ALL_PRONOUNS and stem_name != stem_original:
+                the_before_entity = "the " + ent.to_entity_format() in string
+                the_before_entity = the_before_entity or "The " + ent.to_entity_format() in string
+                other_ent_names = ent_names[:i] + ent_names[i + 1:]
+                if ent.name not in other_ent_names and the_before_entity:
+                    logger.debug("return empty string for %s" % string)
+                    return ""
+                string = string.replace(ent.to_entity_format(), ent.original)
+        return string
+
     def form_question(self, word_list, wh_words, answer):
         """Forms a question from a given list of nodes and strings.
 
@@ -624,10 +659,18 @@ class QuestionGenerator:
                 q_list.append(n['word'])
 
         q_list = self.correct_entity_recognition(q_list)
+        q_string = ' '.join(q_list)
+
+        if self.regard_entity_name:
+            # Remove certain possibly erroneous entity mentions
+            q_string = self.remove_entity_mentions(q_string)
+            answer = self.remove_entity_mentions(answer)
+            if not q_string or not answer:
+                return []
 
         questions = []
         for wh_word in wh_words:
-            questions.append((wh_word + " " + ' '.join(q_list), answer))
+            questions.append((wh_word + " " + q_string, answer))
 
         return questions
 

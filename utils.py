@@ -5,7 +5,7 @@ import re
 from entity import Entity
 
 
-def clean_sentence(sentence, use_singleword_originals=False, regard_entity_name=False):
+def clean_sentence(sentence, use_singleword_originals=False, remove_article=False):
     """Cleans a sentence from entity annotations.
 
      Returns the cleaned sentence as well as a list of its entities.
@@ -14,7 +14,7 @@ def clean_sentence(sentence, use_singleword_originals=False, regard_entity_name=
          sentence (str): the sentence
          use_singleword_originals (bool): if True, entities are replaced by
             their original word if it consists of a single token
-         regard_entity_name (bool): if True, "the" before entity mentions is
+         remove_article (bool): if True, "the" before entity mentions is
             removed in certain cases, e.g. for "the [Actrius|Film|film]"
 
      Returns:
@@ -47,7 +47,7 @@ def clean_sentence(sentence, use_singleword_originals=False, regard_entity_name=
         # written in lowercase and an article precedes the entity.
         # Example: The [Actrius|film] was produced in 1996
         # --> Actrius was produced in 1996 .
-        if regard_entity_name and (m.group('a') is not None and entity.original
+        if remove_article and (m.group('a') is not None and entity.original
                                    and entity.original.islower()
                                    and entity.original.lower() != entity.name.lower()):
             replacement = m.group(2)
