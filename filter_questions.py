@@ -280,7 +280,6 @@ class FilterQuestions:
 
         all_entities = entities + answer_entities
         all_ent_names = [e.name for e in all_entities]
-        pronouns = PRONOUNS.union(OBJ_PRONOUNS)
         for i, ent in enumerate(all_entities):
             the_before_entity = "the " + ent.to_entity_format() in question + answer
             the_before_entity = the_before_entity or "The " + ent.to_entity_format() in question + answer
@@ -616,7 +615,7 @@ def main(args):
 
             total += 1
 
-            if total % 10000 == 0:
+            if total % 100000 == 0:
                 t = (time.time() - start) / 60
                 logger.info("Processed %d questions in %f minutes." % (total, t))
                 logger.info("Kept %d questions." % (total - excluded))
