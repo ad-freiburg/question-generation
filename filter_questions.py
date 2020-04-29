@@ -306,9 +306,11 @@ class FilterQuestions:
         for ent in all_entities:
             stem_name = "".join([self.stemmer.stem(t) for t in ent.clean_name().lower().split(" ")])
             stem_original = "".join([self.stemmer.stem(t) for t in ent.original.lower().split(" ")])
-            # The location-condition is to keep common cases like "the [Britain|country|British] army"
+            # The person-condition is to keep common cases like "[Muammar Gaddafi|Person|Gaddafi]"
+            # The location-condition is to keep common cases like "the [Britain|Location|British] army"
             # TODO: do I need the islower()?
             if not ent.original.islower() and stem_name != stem_original and \
+                    (ent.category != "Person" or ent.original != ent.clean_name().split(" ")[-1]) and \
                     (ent.category != "Location" or len(ent.clean_name().split(" ")) != len(ent.original.split(" "))):
                 # for al in ent.aliases if stem(al) != stem_original:
                 return True
