@@ -400,20 +400,23 @@ class QuestionGenerator:
                 typ = line.strip()
                 self.id_to_type.append(typ)
 
-    def det_wh_word(self, entity, q_list, root, subject_question):
+    def det_wh_word(self, entity, q_list, root, answer_rel):
         """Determines the wh-word by which an answer entity will be replaced.
 
         Args:
             entity (Entity): answer entity
             q_list (list): list of words and nodes that form the question
             root (node): root node of the sentence
-            subject_question (bool): whether the question is a subject question
+            answer_rel (string): rel of the answer node
 
         Returns:
             list: list of wh-words
         """
         if entity.category in WHO_CATEGORIES:
-            wh_words = ["Who"]
+            if answer_rel == 'poss':
+                wh_words = ['Whose']
+            else:
+                wh_words = ["Who"]
         else:
             wh_words = []
 
@@ -439,7 +442,7 @@ class QuestionGenerator:
                 # non-3rd person singular verb and the question is a subject
                 # question (otherwise I can't tell from the root if the
                 # answer entity is plural)
-                if subject_question:
+                if answer_rel in ['nsubj', 'nsubjpass']:
                     if root['tag'] == "VBP":
                         for i, typ in enumerate(types):
                             if " of " in typ.lower():
@@ -448,9 +451,11 @@ class QuestionGenerator:
                             else:
                                 types[i] = get_plural(typ)
 
-                wh_words = ["Which " + typ.lower() for typ in types]
+                appendix = " 's" if answer_rel == 'poss' else ""
+                wh_words = ["Which " + typ.lower() + appendix for typ in types]
 
-            wh_words.append("What")
+            if answer_rel != 'poss':
+                wh_words.append("What")
 
         logger.debug("WH-Words: %s" % wh_words)
         return wh_words
@@ -736,8 +741,7 @@ class QuestionGenerator:
 
         # lower original first word if it is not a proper noun or "I"
         first_node = new_graph.get_by_address(1)
-        if first_node and first_node['word'] and first_node['tag'] not in ["NNP", "NNPS"] \
-                and first_node['word'] != 'I':
+        if first_node and first_node['word'] and first_node['tag'] not in ["NNP", "NNPS"] and first_node['word'] != 'I':
             first_node['word'] = first_node['word'].lower()
 
         # If the question is a "Where"-question don't append another pobj
@@ -758,6 +762,14 @@ class QuestionGenerator:
 
         # Compose the question. The wh-words will be appended in the end.
         q_list = []
+
+        if node['rel'] == 'poss':
+            head = new_graph.nodes[node['head']]
+            subtree = new_graph.get_subtree(head, [node['address']])
+            subtree.append(head)
+            q_list += sorted(subtree, key=lambda x: x['address'])
+            new_graph.rm_deps_recursively(node)
+            new_graph.remove_by_address(node['address'])
 
         # Get the infinitive of the predicate
         root = new_graph.get_root()
@@ -880,7 +892,7 @@ class QuestionGenerator:
 
         # Get wh words if question is not a where or when question
         if not wh_words:
-            wh_words = self.det_wh_word(entity, q_list, root, False)
+            wh_words = self.det_wh_word(entity, q_list, root, node['rel'])
 
         # Plug entities back in and put question into the correct format:
         questions = self.form_question(q_list, wh_words, answer)
@@ -907,14 +919,18 @@ class QuestionGenerator:
             if not n['word'] or not dep_graph.in_main_dependencies(root, n):
                 continue
 
+            head = dep_graph.nodes[n['head']]
+
             if entity is not None and n['rel'] == 'dobj' and entity.category != "unknown":
                 # The word is a direct object (dobj)
                 # if the category is unknown the question word cannot be properly determined
                 q = self.get_object_question(n, [], dep_graph)
 
+            elif entity is not None and n['rel'] == 'poss' and head['rel'] in ['dobj']:
+                q = self.get_object_question(n, [], dep_graph)
+
             elif n['rel'] == 'pobj':
                 # The word is an object of a preposition (pobj)
-                head = dep_graph.nodes[n['head']]
 
                 # This excludes many questions where the answer is not correct.
                 # Unless this is not a problem, this can be left out.
@@ -961,6 +977,7 @@ class QuestionGenerator:
         Returns:
             list: subject questions
         """
+        questions = []
         for i, n in sorted(dep_graph.nodes.items()):
             entity = n['entity']
 
@@ -1005,25 +1022,12 @@ class QuestionGenerator:
                 q_list.append("?")
 
                 # Determine the correct wh-Word
-                if n['rel'] == 'poss':
-                    wh_words = self.det_wh_word(entity, q_list, root, False)
-                    # "Whose" can not be used as interrogative word for inanimate objects
-                    # Use "Which <type> 's" instead
-                    new_wh_words = []
-                    for w in wh_words:
-                        if w == 'Who':
-                            new_wh_words.append('Whose')
-                        if w.startswith('Which'):
-                            new_wh_words.append(w + " 's")
-                    wh_words = new_wh_words
-                    if not wh_words:
-                        continue
-                else:
-                    wh_words = self.det_wh_word(entity, q_list, root, True)
+                wh_words = self.det_wh_word(entity, q_list, root, n['rel'])
+                if not wh_words:
+                    continue
 
-                questions = self.form_question(q_list, wh_words, answer)
-                return questions
-        return []
+                questions += self.form_question(q_list, wh_words, answer)
+        return questions
 
     def generate_question(self, sentence, parse_input):
         """Generates questions from a given sentence.
