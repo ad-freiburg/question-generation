@@ -249,7 +249,7 @@ class EntityDependencyGraph(DependencyGraph):
 
         address = dependent_node['address']
         for k, v in node['deps'].items():
-            if k in ['prep', 'pobj', 'dobj', 'nsubj', 'nsubjpass', 'iobj']:
+            if k in ['prep', 'pobj', 'dobj', 'nsubj', 'nsubjpass', 'iobj', 'poss']:
                 if address in v:
                     return True
                 for adr in v:

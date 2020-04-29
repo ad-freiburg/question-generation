@@ -169,46 +169,6 @@ def rm_subclauses(dep_graph):
     logger.debug("Sent after subclause-removal: %s" % dep_graph.to_sentence())
 
 
-def get_answer(node, dep_graph):
-    """Returns the answer node to the question in entity format.
-
-    Creates the appropriate format for answers that are not entities
-    (i.e. dates).
-
-    Args:
-        node (dict): the answer node
-        dep_graph (EntityDependencyGraph): the dependency graph
-
-    Returns:
-        str: the answer
-    """
-    def _get_date_entity(n):
-        if re.match(r"\d\d\d\d", n['word']):
-            n['entity'] = Entity(n['word'], "Year", n['word'])
-        elif n['word'] in MONTHS:
-            n['entity'] = Entity(n['word'], "Month", n['word'])
-        return n
-
-    # Get answer entity
-    date = False
-    if not node['entity']:
-        date = True
-        node = _get_date_entity(node)
-
-    # Get subtree from the head of the node if it's a pobj to include prepositions in the answer
-    if node['rel'] == "pobj":
-        node = dep_graph.get_by_address(node['head'])
-
-    # Add answer entity dependencies to the answer
-    subtree = dep_graph.get_subtree(node)
-    if date:
-        subtree = [_get_date_entity(s) for s in subtree]
-    subtree.append(node)
-    sublist = sorted(subtree, key=lambda x: x['address'])
-    sublist = get_str_list_from_node_list(sublist, mask_entities=False)
-    return " ".join(sublist)
-
-
 def repair_poss_pronoun_parse(dep_graph):
     """Repairs the parse for entities whose original word is "her".
 
@@ -285,6 +245,27 @@ def recover_pronouns(dep_graph):
     logger.debug("Sent after prp recovery: %s" % dep_graph.to_sentence())
 
 
+def needs_poss_apostrophe_s(node):
+    """Returns True iff the entity original is a possessive pronoun and
+    regard_entity_name is True such that the entity needs an appended " 's".
+    E.g. "[Alice|Person|her] book" -> "[Alice|Person|her] 's book"
+
+    Args:
+        node (dict): the entity node
+
+    Returns:
+        True iff the node needs an appended possessive " 's"
+    """
+    if not node['entity']:
+        return False
+
+    if node['entity'].original.lower() in ["his", "their", "its"] or \
+            (node['entity'].original.lower() == "her" and node['rel'] in ["compound", "nmod", "poss"]):
+        return True
+
+    return False
+
+
 def is_chronological_sentence(dep_graph):
     """Returns true if the sentence is a chronological sentence.
 
@@ -329,13 +310,14 @@ def get_sub_list(rels, dep_graph, root_addr=None):
     return []
 
 
-def get_str_list_from_node_list(q_list, mask_entities=False):
+def get_str_list_from_node_list(q_list, mask_entities=False, append_poss_s=False):
     """Retrieves a list of words from a mixed string-node list.
 
     Args:
         q_list (list): a list of strings and dependency nodes
         mask_entities (bool): entities are returned as "[x]" if true
             (default is False)
+        append_poss_s (bool): whether to append possessive s for prp$ originals
 
     Returns:
         list: words in the sentence
@@ -350,6 +332,8 @@ def get_str_list_from_node_list(q_list, mask_entities=False):
                 result.append(entity_mask)
             else:
                 result.append(el['entity'].to_entity_format())
+            if append_poss_s and needs_poss_apostrophe_s(el):
+                result.append("'s")
         else:
             result.append(el['word'])
     return result
@@ -591,6 +575,46 @@ class QuestionGenerator:
                 string = string.replace(ent.to_entity_format(), ent.original)
         return string
 
+    def form_answer(self, node, dep_graph):
+        """Returns the answer node to the question in entity format.
+
+        Creates the appropriate format for answers that are not entities
+        (i.e. dates).
+
+        Args:
+            node (dict): the answer node
+            dep_graph (EntityDependencyGraph): the dependency graph
+
+        Returns:
+            str: the answer
+        """
+
+        def _get_date_entity(n):
+            if re.match(r"\d\d\d\d", n['word']):
+                n['entity'] = Entity(n['word'], "Year", n['word'])
+            elif n['word'] in MONTHS:
+                n['entity'] = Entity(n['word'], "Month", n['word'])
+            return n
+
+        # Get answer entity
+        date = False
+        if not node['entity']:
+            date = True
+            node = _get_date_entity(node)
+
+        # Get subtree from the head of the node if it's a pobj to include prepositions in the answer
+        if node['rel'] == "pobj":
+            node = dep_graph.get_by_address(node['head'])
+
+        # Add answer entity dependencies to the answer
+        subtree = dep_graph.get_subtree(node)
+        if date:
+            subtree = [_get_date_entity(s) for s in subtree]
+        subtree.append(node)
+        sublist = sorted(subtree, key=lambda x: x['address'])
+        sublist = get_str_list_from_node_list(sublist, mask_entities=False, append_poss_s=self.regard_entity_name)
+        return " ".join(sublist)
+
     def form_question(self, word_list, wh_words, answer):
         """Forms a question from a given list of nodes and strings.
 
@@ -625,9 +649,7 @@ class QuestionGenerator:
                 # Add missing possessive "s", as in:
                 # "[A|Person|her] book" -> "[A|Person|her] 's book"
                 # s.t. the abstract question will later be "[Person] 's book"
-                if self.regard_entity_name and n['entity'].original.lower() in ["his", "their", "its"] \
-                        or (n['entity'].original.lower() == "her"
-                            and n['rel'] in ["compound", "nmod", "poss"]):
+                if self.regard_entity_name and needs_poss_apostrophe_s(n):
                     filtered_list.append("'s")
 
         logger.debug("filtered_list: %s" % filtered_list)
@@ -689,7 +711,7 @@ class QuestionGenerator:
         node = new_graph.get_by_address(node['address'])
 
         # Get the answer entity/word
-        answer = get_answer(node, new_graph)
+        answer = self.form_answer(node, new_graph)
         entity = node['entity']
         node['entity'] = None
 
@@ -948,7 +970,9 @@ class QuestionGenerator:
 
             # The word can either be a nominal subject or a passive nominal
             # subject
-            if entity is not None and n['rel'] in ['nsubj', 'nsubjpass'] and entity.category != "unknown":
+            head = dep_graph.get_by_address(n['head'])
+            if entity is not None and ((n['rel'] in ['nsubj', 'nsubjpass'] and entity.category != "unknown") or
+                                       (n['rel'] == 'poss' and head['rel'] in ['nsubj', 'nsubjpass'])):
                 # Counteract bad entity recognition by excluding sentences like
                 # "[x|y|It] became clear that..."
                 if entity.original.lower() == "it" and "ccomp" in root['deps'].keys():
@@ -958,7 +982,7 @@ class QuestionGenerator:
                 n = new_graph.get_by_address(i)
 
                 # Get the answer entity
-                answer = get_answer(n, new_graph)
+                answer = self.form_answer(n, new_graph)
                 n['entity'] = None
 
                 # Determine everything that belongs to this subject and replace
@@ -981,7 +1005,21 @@ class QuestionGenerator:
                 q_list.append("?")
 
                 # Determine the correct wh-Word
-                wh_words = self.det_wh_word(entity, q_list, root, True)
+                if n['rel'] == 'poss':
+                    wh_words = self.det_wh_word(entity, q_list, root, False)
+                    # "Whose" can not be used as interrogative word for inanimate objects
+                    # Use "Which <type> 's" instead
+                    new_wh_words = []
+                    for w in wh_words:
+                        if w == 'Who':
+                            new_wh_words.append('Whose')
+                        if w.startswith('Which'):
+                            new_wh_words.append(w + " 's")
+                    wh_words = new_wh_words
+                    if not wh_words:
+                        continue
+                else:
+                    wh_words = self.det_wh_word(entity, q_list, root, True)
 
                 questions = self.form_question(q_list, wh_words, answer)
                 return questions
