@@ -29,8 +29,12 @@ QG_TYPES_PATH = config.QG_MAPPINGS + "qg_types.txt"
 
 MONTHS = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November",
           "December"}
-CONTEXT_WORDS = {"also", "then", "however", "instead", "therefore", "otherwise", "immediately", "later", "even"}
 WHO_CATEGORIES = {"Person", "Fictional Character", "Musical Artist", "Musical Group", "Sports Team"}
+
+CONTEXT_WORDS = {"also", "then", "however", "instead", "therefore", "otherwise", "immediately", "later", "even"}
+INTR_PREP_PHRASE_CONTEXT_WORDS = {"next"}
+ALL_CONTEXT_WORDS = CONTEXT_WORDS.union(INTR_PREP_PHRASE_CONTEXT_WORDS)
+
 PRONOUNS = {"she", "he", "it", "they"}
 POSS_PRONOUNS = {"her", "his", "its", "their"}
 OBJ_PRONOUNS = {"her", "him", "it", "them"}
@@ -248,13 +252,14 @@ def recover_pronouns(dep_graph):
 def needs_poss_apostrophe_s(node):
     """Returns True iff the entity original is a possessive pronoun and
     regard_entity_name is True such that the entity needs an appended " 's".
+
     E.g. "[Alice|Person|her] book" -> "[Alice|Person|her] 's book"
 
     Args:
         node (dict): the entity node
 
     Returns:
-        True iff the node needs an appended possessive " 's"
+        bool: True iff the node needs an appended possessive " 's"
     """
     if not node['entity']:
         return False
@@ -264,6 +269,18 @@ def needs_poss_apostrophe_s(node):
         return True
 
     return False
+
+
+def needs_lowercase(node):
+    """Returns True if the node word should be lowercase
+
+    Args:
+        node (dict): the node
+
+    Returns:
+        bool: True iff the node word should be lowercase
+    """
+    return node['address'] == 1 and node['word'] and node['tag'] not in ["NNP", "NNPS"] and node['word'] != 'I'
 
 
 def is_chronological_sentence(dep_graph):
@@ -744,7 +761,7 @@ class QuestionGenerator:
 
         # lower original first word if it is not a proper noun or "I"
         first_node = new_graph.get_by_address(1)
-        if first_node and first_node['word'] and first_node['tag'] not in ["NNP", "NNPS"] and first_node['word'] != 'I':
+        if first_node and needs_lowercase(first_node):
             first_node['word'] = first_node['word'].lower()
 
         # If the question is a "Where"-question don't append another pobj
@@ -1027,15 +1044,38 @@ class QuestionGenerator:
                 # Form the new sentence and plug entities back in in the
                 # correct format
                 q_list = []
+                pre_pobj_phrase = []
                 min_index = n['address']
                 for j, v in sorted(new_graph.nodes.items()):
                     if j is None:
                         continue
                     # Remove "also" if it appears directly before the root
                     # TODO: Consider always removing it
-                    if j > min_index and (v['word'] not in CONTEXT_WORDS or (j + 1 >= len(new_graph.nodes)
-                                                                             or new_graph.nodes[j + 1] != root)):
+                    if j < min_index and v and v['word'] and v['rel'] != 'punct':
+                        # Get introductory prepositional phrase and append it
+                        # to the question to reduce missing context problems
+                        if not pre_pobj_phrase and needs_lowercase(v):
+                            v['word'] = v['word'].lower()
+                        pre_pobj_phrase.append(v)
+                    elif j > min_index and (v['word'] not in CONTEXT_WORDS or (j + 1 >= len(new_graph.nodes)
+                                                                               or new_graph.nodes[j + 1] != root)):
                         q_list.append(v)
+
+                append = False
+                for pn in pre_pobj_phrase:
+                    if not new_graph.get_by_address(pn['head']) or pn['word'] in ALL_CONTEXT_WORDS:
+                        # Don't append phrase if it depends on a removed part
+                        # Don't append phrase if it contains a context word as in
+                        # "In the following 3 years"
+                        append = False
+                        break
+                    if pn['rel'] in ['prep', 'advcl'] and pn['head'] == root['address']:
+                        append = True
+
+                if append:
+                    logger.debug("Pre-pobj-phrase: %s" % pre_pobj_phrase)
+                    q_list += pre_pobj_phrase
+
                 q_list.append("?")
 
                 # Determine the correct wh-Word
