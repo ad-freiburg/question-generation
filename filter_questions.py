@@ -190,12 +190,12 @@ class Filter(Enum):
 class FilterQuestions:
     """Filters questions according to various filter criteria.
     """
-    def __init__(self, max_tokens, wikidata_entities, regard_entity_name):
+    def __init__(self, wikidata_entities, regard_entity_name):
         self.stemmer = SnowballStemmer('english')
         self.name_to_mid = dict()
         if not wikidata_entities:
             self.read_name_to_mid(NAME_TO_MID_PATH)
-        self.max_tokens = max_tokens
+        self.max_tokens = MAX_TOKENS
         self.connection_map = defaultdict(dict)
         self.wikidata_entities = wikidata_entities
         self.regard_entity_name = regard_entity_name
@@ -541,7 +541,7 @@ class FilterQuestions:
             logger.debug("filter missing context")
             return Filter.MISSING_CONTEXT
 
-        if self.max_tokens and self.filter_max_tokens(question):
+        if self.filter_max_tokens(question):
             logger.debug("filter max tokens")
             return Filter.MAX_TOKENS
 
@@ -597,7 +597,7 @@ def main(args):
     if args.filter_file:
         filter_file = open(args.filter_file, "w", encoding="utf8")
 
-    fq = FilterQuestions(args.filter_max_tokens, args.wikidata, args.regard_entity_name)
+    fq = FilterQuestions(args.wikidata, args.regard_entity_name)
     total = 0
     excluded = 0
     start = time.time()
@@ -638,8 +638,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--debug", default=False, action="store_true",
                         help="Print additional information for debugging.")
-    parser.add_argument("-m", "--filter_max_tokens", type=int, default=None,
-                        help="Filter out questions with more than <arg> tokens")
     parser.add_argument("--wikidata", default=False, action="store_true",
                         help="Entities in input sentences are from Wikidata")
     parser.add_argument("-f", "--filter_file", default="", type=str,
