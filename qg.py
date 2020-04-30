@@ -32,7 +32,7 @@ MONTHS = {"January", "February", "March", "April", "May", "June", "July", "Augus
 WHO_CATEGORIES = {"Person", "Fictional Character", "Musical Artist", "Musical Group", "Sports Team"}
 
 CONTEXT_WORDS = {"also", "then", "however", "instead", "therefore", "otherwise", "immediately", "later", "even"}
-INTR_PREP_PHRASE_CONTEXT_WORDS = {"next"}
+INTR_PREP_PHRASE_CONTEXT_WORDS = {"next", "example"}
 ALL_CONTEXT_WORDS = CONTEXT_WORDS.union(INTR_PREP_PHRASE_CONTEXT_WORDS)
 
 PRONOUNS = {"she", "he", "it", "they"}
@@ -379,6 +379,33 @@ def remove_time_phrase(dep_graph):
                     dep_graph.rm_deps_recursively(head)
                     dep_graph.remove_by_address(head["address"])
                     logger.debug("Removed time phrase. new sentence: %s" % dep_graph.to_sentence())
+
+
+def get_introductory_prep_phrase(dep_graph, min_index, answer_node, root, q_list):
+    pre_pobj_phrase = []
+    for j, v in sorted(dep_graph.nodes.items()):
+        if j is None:
+            continue
+        if j < min_index and v and v['word'] and v['rel'] != 'punct':
+            # Get introductory prepositional phrase and append it
+            # to the question to reduce missing context problems
+            if not pre_pobj_phrase and needs_lowercase(v):
+                v['word'] = v['word'].lower()
+
+            pre_pobj_phrase.append(v)
+
+    append = False
+    for pn in pre_pobj_phrase:
+        if not dep_graph.get_by_address(pn['head']) or pn == answer_node or pn['word'] in ALL_CONTEXT_WORDS:
+            # Don't append phrase if it depends on a removed part
+            # Don't append phrase if it contains a context word as in
+            # "In the following 3 years"
+            append = False
+            break
+        if pn['rel'] in ['prep', 'advcl'] and pn['head'] == root['address'] and pn not in q_list:
+            append = True
+
+    return pre_pobj_phrase if append else []
 
 
 class QuestionGenerator:
@@ -828,13 +855,13 @@ class QuestionGenerator:
         # Append subject subtree
         subj_sub_list = get_sub_list(['nsubj', 'nsubjpass'], new_graph, root['address'])
 
+        # Remove leading hyphen
+        if subj_sub_list and subj_sub_list[0]['word'] in ['â\x80\x93', "-"]:
+            del subj_sub_list[0]
+
         # Don't form a question if there is no subject dependent on the root
         if not subj_sub_list:
             return []
-
-        # Remove leading hyphen
-        if subj_sub_list[0]['word'] in ['â\x80\x93', "-"]:
-            del subj_sub_list[0]
 
         q_list += subj_sub_list
 
@@ -896,6 +923,7 @@ class QuestionGenerator:
                 # question gets bulky
                 break
         q_list += sorted(subtree, key=lambda x: x['address'])
+        q_list += get_introductory_prep_phrase(new_graph, subj_sub_list[0]['address'], node, root, q_list)
 
         # Only append a comp sublist if it is not in the q_list already and if
         # it is not before the root node
@@ -1044,37 +1072,18 @@ class QuestionGenerator:
                 # Form the new sentence and plug entities back in in the
                 # correct format
                 q_list = []
-                pre_pobj_phrase = []
                 min_index = n['address']
                 for j, v in sorted(new_graph.nodes.items()):
                     if j is None:
                         continue
-                    # Remove "also" if it appears directly before the root
-                    # TODO: Consider always removing it
-                    if j < min_index and v and v['word'] and v['rel'] != 'punct':
-                        # Get introductory prepositional phrase and append it
-                        # to the question to reduce missing context problems
-                        if not pre_pobj_phrase and needs_lowercase(v):
-                            v['word'] = v['word'].lower()
-                        pre_pobj_phrase.append(v)
                     elif j > min_index and (v['word'] not in CONTEXT_WORDS or (j + 1 >= len(new_graph.nodes)
                                                                                or new_graph.nodes[j + 1] != root)):
+                        # Remove "also" if it appears directly before the root
+                        # TODO: Consider always removing it
                         q_list.append(v)
 
-                append = False
-                for pn in pre_pobj_phrase:
-                    if not new_graph.get_by_address(pn['head']) or pn['word'] in ALL_CONTEXT_WORDS:
-                        # Don't append phrase if it depends on a removed part
-                        # Don't append phrase if it contains a context word as in
-                        # "In the following 3 years"
-                        append = False
-                        break
-                    if pn['rel'] in ['prep', 'advcl'] and pn['head'] == root['address']:
-                        append = True
-
-                if append:
-                    logger.debug("Pre-pobj-phrase: %s" % pre_pobj_phrase)
-                    q_list += pre_pobj_phrase
+                prep_phrase = get_introductory_prep_phrase(new_graph, n['address'], n, root, q_list)
+                q_list += prep_phrase
 
                 q_list.append("?")
 
