@@ -369,6 +369,7 @@ class QuestionGenerator:
 
     Entity mentions are in the format [<entity_name>|<category>|<original word>]
     """
+
     def __init__(self, parse_input, regard_entity_name):
         if parse_input:
             self.spacy_parser = SpacyParser()
@@ -412,7 +413,9 @@ class QuestionGenerator:
         Returns:
             list: list of wh-words
         """
-        if entity.category in WHO_CATEGORIES:
+        if answer_rel == 'nummod':
+            wh_words = ['How many']
+        elif entity.category in WHO_CATEGORIES:
             if answer_rel == 'poss':
                 wh_words = ['Whose']
             else:
@@ -988,12 +991,27 @@ class QuestionGenerator:
             # The word can either be a nominal subject or a passive nominal
             # subject
             head = dep_graph.get_by_address(n['head'])
+            root = dep_graph.get_root()
             if entity is not None and ((n['rel'] in ['nsubj', 'nsubjpass'] and entity.category != "unknown") or
-                                       (n['rel'] == 'poss' and head['rel'] in ['nsubj', 'nsubjpass'])):
+                                       (n['rel'] == 'poss' and head['rel'] in ['nsubj', 'nsubjpass'])) or \
+                    (n['rel'] == 'nummod' and head['rel'] in ['nsubj', 'nsubjpass'] and
+                     head['tag'] in ['NNS', 'NNPS'] and self.lemmatizer.lemmatize(root['word'], 'v') != 'be'):
                 # Counteract bad entity recognition by excluding sentences like
                 # "[x|y|It] became clear that..."
-                if entity.original.lower() == "it" and "ccomp" in root['deps'].keys():
-                    return []
+                if entity and entity.original.lower() == "it" and "ccomp" in root['deps'].keys():
+                    continue
+
+                # Do not create How-many-question if the nummod is preceeded by an article like
+                # "The 1997 movie [Actirus|film|Actirus] ..."
+                if n['rel'] == 'nummod':
+                    dep_nodes = dep_graph.get_subtree(head)
+                    skip = False
+                    for dn in dep_nodes:
+                        if dn['rel'] == 'det' or (dn['word'] and dn['word'].lower() in ["that", "these", "those"]):
+                            skip = True
+                            break
+                    if skip:
+                        continue
 
                 new_graph = copy.deepcopy(dep_graph)
                 n = new_graph.get_by_address(i)
@@ -1009,7 +1027,6 @@ class QuestionGenerator:
                 # Form the new sentence and plug entities back in in the
                 # correct format
                 q_list = []
-                root = new_graph.get_root()
                 min_index = n['address']
                 for j, v in sorted(new_graph.nodes.items()):
                     if j is None:
