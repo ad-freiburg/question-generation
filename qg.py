@@ -1066,6 +1066,7 @@ class QuestionGenerator:
             return [], None
 
         dep_graph = get_dependency_graph(sentence)
+        original_sentence = dep_graph.to_sentence()
 
         # Questions from sentences with a ":" are often weird
         # e.g.: "Who wrote in the [New York Times]?
@@ -1095,7 +1096,6 @@ class QuestionGenerator:
             return [], None
 
         # Generate the questions
-        original_sentence = dep_graph.to_sentence()
         questions = self.generate_subject_question(root, dep_graph)
         questions += self.generate_object_questions(root, dep_graph)
         return questions, original_sentence
