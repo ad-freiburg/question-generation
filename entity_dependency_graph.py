@@ -192,7 +192,7 @@ class EntityDependencyGraph(DependencyGraph):
         logger.debug("Predicate list: %s" % lst)
         return sorted(lst, key=lambda x: x['address'])
 
-    def get_subtree(self, node, exclude=[]):
+    def get_subtree(self, node, exclude=None):
         """Returns all child-nodes of a given node in the graph as a list.
 
         Args:
@@ -202,6 +202,8 @@ class EntityDependencyGraph(DependencyGraph):
         Returns:
             list: list of child nodes
         """
+        if exclude is None:
+            exclude = []
         lst = []
         for k, v in node['deps'].items():
             for el in v:
