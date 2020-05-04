@@ -351,7 +351,7 @@ def get_str_list_from_node_list(q_list, mask_entities=False, append_poss_s=False
                 result.append(el['entity'].to_entity_format())
             if append_poss_s and needs_poss_apostrophe_s(el):
                 result.append("'s")
-        else:
+        elif el['word']:
             result.append(el['word'])
     return result
 
