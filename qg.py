@@ -829,22 +829,6 @@ class QuestionGenerator:
         if first_node and needs_lowercase(first_node):
             first_node['word'] = first_node['word'].lower()
 
-        # If the question is a "Where"-question don't append another pobj
-        # Location
-        # TODO: this introduces a lot of garbage sentences where parts are missing.
-        if "Where" in wh_words:
-            for n in new_graph.get_by_rel(["pobj"]):
-                entity = n['entity']
-                if entity is not None and entity.category == "Location":
-                    if n['head'] is None:
-                        continue
-                    head = new_graph.get_by_address(n['head'])
-                    if head is None or head['word'] in ["of", "from", "by", "with", "for", "as", "to"]:
-                        continue
-                    new_graph.rm_deps_recursively(head)
-                    if n['head'] in new_graph.nodes:
-                        new_graph.remove_by_address(n['head'])
-
         # Compose the question. The wh-words will be appended in the end.
         q_list = []
 
