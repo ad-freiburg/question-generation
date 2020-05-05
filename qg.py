@@ -1028,7 +1028,7 @@ class QuestionGenerator:
                     # Only form question if the head preposition is not "for"
                     # to avoid sth like:
                     # "Where did [Ayn_Rand|Person|She] set out ?" --> Hollywood
-                    if head['word'] not in ["for", "as", "of", "from", "by", "with"]:
+                    if head['word'] not in ["for", "as", "of", "from", "by", "with", "through"]:
                         # Check whether to form a Where-question
                         q = self.get_object_question(n, ["Where"], dep_graph)
 
