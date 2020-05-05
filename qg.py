@@ -1115,8 +1115,7 @@ class QuestionGenerator:
                         continue
                     elif j > min_index and (v['word'] not in CONTEXT_WORDS or (j + 1 >= len(new_graph.nodes)
                                                                                or new_graph.nodes[j + 1] != root)):
-                        # Remove "also" if it appears directly before the root
-                        # TODO: Consider always removing it
+                        # Remove context words like "also" if it appears directly before the root
                         q_list.append(v)
 
                 remove_time_phrase(new_graph, q_list)
