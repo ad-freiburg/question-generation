@@ -131,19 +131,31 @@ class EntityDependencyGraph(DependencyGraph):
         template = '{address}\t{word}\t{tag}\t{head}\t{rel}\t{entity}\n'
         return ''.join(template.format(i=i, **node) for i, node in sorted(self.nodes.items()) if node['tag'] != 'TOP')
 
-    def get_by_address(self, node_address):
+    def get_by_address(self, address):
         """Returns the node with the given address.
 
         But without creating a new node if it doesn't exist.
 
         Args:
-            node_address (int): address of the node to be retrieved
+            address (int): address of the node to be retrieved
 
         Returns:
             dict: the node
         """
-        if node_address in self.nodes:
-            return self.nodes[node_address]
+        if address in self.nodes:
+            return self.nodes[address]
+
+    def remove_by_address(self, address):
+        """Removes the node with the given address if it exists.
+
+        Args:
+            address (int): address of the node to be removed
+
+        Returns:
+            dict: the node
+        """
+        if address in self.nodes:
+            del self.nodes[address]
 
     def get_by_rel(self, rels):
         """Returns all nodes in the graph which have the given relations.
@@ -209,8 +221,8 @@ class EntityDependencyGraph(DependencyGraph):
             for el in v:
                 if el in exclude:
                     continue
-                dep_node = self.nodes[el]
-                if dep_node['address'] is None:
+                dep_node = self.get_by_address(el)
+                if not dep_node:
                     continue
                 lst += self.get_subtree(dep_node)
                 lst.append(dep_node)
@@ -300,5 +312,5 @@ class EntityDependencyGraph(DependencyGraph):
             return
         for k, v in node['deps'].items():
             for el in v:
-                self.rm_deps_recursively(self.nodes[el])
+                self.rm_deps_recursively(self.get_by_address(el))
                 self.remove_by_address(el)

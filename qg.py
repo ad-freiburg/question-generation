@@ -168,9 +168,38 @@ def rm_subclauses(dep_graph):
 
     # remove nodes marked for removal and their dependent nodes
     for addr in rm_list:
-        if addr in dep_graph.nodes:
-            dep_graph.remove_by_address(addr)
+        dep_graph.remove_by_address(addr)
     logger.debug("Sent after subclause-removal: %s" % dep_graph.to_sentence())
+
+
+def recover_commma_separated_year(dep_graph):
+    """Remove the comma between a year separated by comma from the rest of the
+    date.
+
+    E.g. transform "On October 11th, 1993, ..." to "On October 11th 1993, ..."
+
+    Args:
+        dep_graph (EntityDependencyGraph): the dependency graph
+    """
+    allowed_preps = ["in", "at", "on", "by", "after", "before", "from", "to"]
+    root = dep_graph.get_root()
+    subj = dep_graph.get_by_rel(['nsubj', 'nsubjpass'])
+    if not root or not subj:
+        return
+    subj = subj[0]
+    for n in dep_graph.get_by_rel(['pobj']):
+        head = dep_graph.get_by_address(n['head'])
+        if (re.match(r"\d\d\d\d", n['word']) or n['word'] in MONTHS) and head and head['tag'] == 'IN' and \
+                head['word'].lower() in allowed_preps:
+            subtree = dep_graph.get_subtree(head)
+            sublist = sorted(subtree, key=lambda x: x['address'])
+            for i, sn in enumerate(sublist):
+                if i > 0 and re.match(r"\d+", sn['word']) and sublist[i-1]['word'] == ',':
+                    address = sublist[i-1]['address']
+                    dep_graph.remove_by_address(address)
+                    next_comma = dep_graph.get_by_address(address+2)
+                    if next_comma and next_comma['word'] == ',' and address > min(root['address'], subj['address']):
+                        dep_graph.remove_by_address(next_comma['address'])
 
 
 def repair_poss_pronoun_parse(dep_graph):
@@ -384,8 +413,7 @@ def remove_time_phrase(dep_graph, q_list=None):
     if not q_list or date_in_q_list:
         for n in date_heads:
             dep_graph.rm_deps_recursively(n)
-            if n['address'] in dep_graph.nodes:
-                dep_graph.remove_by_address(n['address'])
+            dep_graph.remove_by_address(n['address'])
         logger.debug("Removed time phrase. new sentence: %s" % dep_graph.to_sentence())
 
 
@@ -1148,6 +1176,7 @@ class QuestionGenerator:
             return [], None
 
         # Remove subclauses in the sentence
+        recover_commma_separated_year(dep_graph)
         rm_subclauses(dep_graph)
 
         # Replace certain named entity mentions on pronouns by the pronoun
