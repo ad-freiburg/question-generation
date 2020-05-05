@@ -356,37 +356,57 @@ def get_str_list_from_node_list(q_list, mask_entities=False, append_poss_s=False
     return result
 
 
-def remove_time_phrase(dep_graph):
+def remove_time_phrase(dep_graph, q_list=None):
     """Removes pobj time phrases in the dependency graph.
 
     E.g. "in 1997"
+    If q_list is given only remove the phrase if another time phrase is present
+    in q_list.
 
     Args:
         dep_graph (EntityDependencyGraph): the dependency graph
+        q_list (list): list of words and nodes that form the question so far
 
     Returns:
         None
     """
-    for _, n in sorted(dep_graph.nodes.items()):
-        if n['rel'] == 'pobj':
-            # The word is an object of a preposition (pobj) and the preposition is the head
-            head = dep_graph.nodes[n['head']]
+    allowed_preps = ["in", "at", "on", "by", "after", "before", "from", "to"]
+    date_in_q_list = False
+    date_heads = []
+    for n in dep_graph.get_by_rel(['pobj']):
+        head = dep_graph.get_by_address(n['head']) if n['head'] else None
+        if (re.match(r"\d\d\d\d", n['word']) or n['word'] in MONTHS) and head and head['tag'] == 'IN' and \
+                head['word'].lower() in allowed_preps:
+            if q_list and n in q_list:
+                date_in_q_list = True
+            else:
+                date_heads.append(head)
+    if not q_list or date_in_q_list:
+        for n in date_heads:
+            dep_graph.rm_deps_recursively(n)
+            if n['address'] in dep_graph.nodes:
+                dep_graph.remove_by_address(n['address'])
+        logger.debug("Removed time phrase. new sentence: %s" % dep_graph.to_sentence())
 
-            if (re.match(r"\d\d\d\d", n['word']) or n['word'] in MONTHS) and head['tag'] == "IN":
-                # Don't form a question if the preposition is e.g. "for", "since" or "to"
-                allowed_preps = ["in", "at", "on", "by", "after", "before", "from"]
-                if head['word'].lower() in allowed_preps:
-                    dep_graph.rm_deps_recursively(head)
-                    dep_graph.remove_by_address(head["address"])
-                    logger.debug("Removed time phrase. new sentence: %s" % dep_graph.to_sentence())
 
+def get_introductory_prep_phrase(dep_graph, max_index, answer_node, root, q_list):
+    """Get the introductory prepositional phrase of a sentence if it has one
 
-def get_introductory_prep_phrase(dep_graph, min_index, answer_node, root, q_list):
+    Args:
+        dep_graph (EntityDependencyGraph): the dependency graph
+        max_index (int): maximum index until where to look for the phrase
+        answer_node (dict): answer node
+        root (dict): root node of the question
+        q_list (list): list of words and nodes that form the question so far
+
+    Returns:
+        list: nodes of the introductory prespositional phrase
+    """
     pre_pobj_phrase = []
     for j, v in sorted(dep_graph.nodes.items()):
         if j is None:
             continue
-        if j < min_index and v and v['word'] and v['rel'] != 'punct':
+        if j < max_index and v and v['word'] and v['rel'] != 'punct':
             # Get introductory prepositional phrase and append it
             # to the question to reduce missing context problems
             if not pre_pobj_phrase and needs_lowercase(v):
@@ -772,19 +792,37 @@ class QuestionGenerator:
         new_graph.rm_deps_recursively(node)
         logger.debug("Sent after deps_removal: %s" % new_graph.to_sentence())
 
+        root = new_graph.get_root()
+        if not root:
+            logger.debug("No root node found: %s" % new_graph.to_sentence())
+            return []
+
         # Remove the preposition. Only if it's a when or where question,
         # otherwise head is not a preposition
         if node['rel'] == 'pobj':
+            head = new_graph.nodes[node['head']]
+
             # If the preposition is "to", don't remove it to avoid questions
             # like "Where did [Louis_Riel|Person|Riel] and his comrades flee ?"
-            head = dep_graph.nodes[node['head']]
             if head['word'] != "to":
                 logger.debug("Preposition of pobj removed.")
+                new_graph.rm_deps_recursively(head)
                 new_graph.remove_by_address(node['head'])
 
-        # If it's a when-question, remove other occurrences of time phrases
-        if "When" in wh_words:
-            remove_time_phrase(new_graph)
+            if "When" in wh_words:
+                # If it's a from-to or from-until date phrase, add to-part to answer
+                for n in new_graph.get_by_rel(['pobj']):
+                    nhead = new_graph.get_by_address(n['head']) if n['head'] else None
+                    if (re.match(r"\d\d\d\d", n['word']) or n['word'] in MONTHS) and nhead \
+                            and nhead['tag'] == 'IN' and nhead['word'].lower() in ['until', 'to'] and \
+                            head['word'].lower() == 'from' and 0 < nhead['address'] - head['address'] < 5:
+                        answer_appendix = self.form_answer(n, new_graph)
+                        answer += " " + answer_appendix
+                        new_graph.rm_deps_recursively(nhead)
+                        new_graph.remove_by_address(nhead['address'])
+
+                # Remove other occurrences of time phrases
+                remove_time_phrase(new_graph)
 
         # lower original first word if it is not a proper noun or "I"
         first_node = new_graph.get_by_address(1)
@@ -819,10 +857,6 @@ class QuestionGenerator:
             new_graph.remove_by_address(node['address'])
 
         # Get the infinitive of the predicate
-        root = new_graph.get_root()
-        if not root:
-            logger.debug("No root node found: %s" % new_graph.to_sentence())
-            return []
         infinitive = self.lemmatizer.lemmatize(root['word'], 'v')
 
         # Determine the auxiliary verb
@@ -923,6 +957,9 @@ class QuestionGenerator:
                 # question gets bulky
                 break
         q_list += sorted(subtree, key=lambda x: x['address'])
+
+        if "When" not in wh_words:
+            remove_time_phrase(new_graph, q_list)
         q_list += get_introductory_prep_phrase(new_graph, subj_sub_list[0]['address'], node, root, q_list)
 
         # Only append a comp sublist if it is not in the q_list already and if
@@ -1082,6 +1119,7 @@ class QuestionGenerator:
                         # TODO: Consider always removing it
                         q_list.append(v)
 
+                remove_time_phrase(new_graph, q_list)
                 prep_phrase = get_introductory_prep_phrase(new_graph, n['address'], n, root, q_list)
                 q_list += prep_phrase
 
