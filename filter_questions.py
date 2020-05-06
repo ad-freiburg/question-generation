@@ -279,7 +279,7 @@ class FilterQuestions:
                 return True
 
         all_entities = entities + answer_entities
-        all_ent_names = [e.name for e in all_entities]
+        all_ent_names = [e.name if e.original.lower() not in ALL_PRONOUNS else None for e in all_entities]
         for i, ent in enumerate(all_entities):
             the_before_entity = "the " + ent.to_entity_format() in question + answer
             the_before_entity = the_before_entity or "The " + ent.to_entity_format() in question + answer
