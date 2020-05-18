@@ -40,6 +40,8 @@ POSS_PRONOUNS = {"her", "his", "its", "their"}
 OBJ_PRONOUNS = {"her", "him", "it", "them"}
 ALL_PRONOUNS = PRONOUNS.union(POSS_PRONOUNS).union(OBJ_PRONOUNS)
 
+COMMA_MASK = "$,$"
+
 
 def get_dependency_graph(parse_string):
     """Returns the dependency graph for a sentence given its parse string.
@@ -172,7 +174,7 @@ def rm_subclauses(dep_graph):
     logger.debug("Sent after subclause-removal: %s" % dep_graph.to_sentence())
 
 
-def recover_commma_separated_year(dep_graph):
+def recover_comma_separated_year(dep_graph):
     """Remove the comma between a year separated by comma from the rest of the
     date.
 
@@ -196,10 +198,12 @@ def recover_commma_separated_year(dep_graph):
             for i, sn in enumerate(sublist):
                 if i > 0 and re.match(r"\d+", sn['word']) and sublist[i-1]['word'] == ',':
                     address = sublist[i-1]['address']
-                    dep_graph.remove_by_address(address)
+                    comma_node = dep_graph.get_by_address(address)
+                    if comma_node:
+                        comma_node['word'] = COMMA_MASK
                     next_comma = dep_graph.get_by_address(address+2)
                     if next_comma and next_comma['word'] == ',' and address > min(root['address'], subj['address']):
-                        dep_graph.remove_by_address(next_comma['address'])
+                        next_comma['word'] = COMMA_MASK
 
 
 def repair_poss_pronoun_parse(dep_graph):
@@ -713,6 +717,7 @@ class QuestionGenerator:
         subtree.append(node)
         sublist = sorted(subtree, key=lambda x: x['address'])
         sublist = get_str_list_from_node_list(sublist, mask_entities=False, append_poss_s=self.regard_entity_name)
+        sublist = [tok if tok != COMMA_MASK else "," for tok in sublist]
         return " ".join(sublist)
 
     def form_question(self, word_list, wh_words, answer):
@@ -781,6 +786,15 @@ class QuestionGenerator:
                 q_list.append(n['word'])
 
         q_list = self.correct_entity_recognition(q_list)
+
+        # Discard questions that contain a comma. This is a filter, but can't be put into filter_questions.py
+        # since the unmasking of commas that should be kept happens afterwards and filter_questions.py should
+        # not modify the questions themselves.
+        if "," in q_list:
+            return []
+        # Unmask commas that should not lead to discarding a question
+        q_list = [tok if tok != COMMA_MASK else "," for tok in q_list]
+
         q_string = ' '.join(q_list)
 
         if self.regard_entity_name:
@@ -1176,7 +1190,7 @@ class QuestionGenerator:
             return [], None
 
         # Remove subclauses in the sentence
-        recover_commma_separated_year(dep_graph)
+        recover_comma_separated_year(dep_graph)
         rm_subclauses(dep_graph)
 
         # Replace certain named entity mentions on pronouns by the pronoun

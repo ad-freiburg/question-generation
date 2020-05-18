@@ -529,7 +529,8 @@ class FilterQuestions:
             logger.debug("filter question it")
             return Filter.ENTITY_IT
 
-        if self.filter_comma(question):
+        # In the latest qg version, comma filtering is done while generating questions
+        if False and self.filter_comma(question):
             logger.debug("filter comma")
             return Filter.COMMA
 
