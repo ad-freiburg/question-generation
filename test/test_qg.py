@@ -2,8 +2,13 @@
 # Author: Natalie Prange <prangen@informatik.uni-freiburg.de>
 
 import unittest
-
 import warnings
+import os
+import sys
+import inspect
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
 from utils import clean_sentence
 from entity import Entity
 from collections import defaultdict
@@ -13,7 +18,7 @@ QG = QuestionGenerator(parse_input=False, regard_entity_name=False)
 
 PARSE = []
 QG_RESULTS = defaultdict(list)
-with open("test_parse.txt", "r", encoding="utf8") as file:
+with open(os.path.join(current_dir, "test_parse.txt"), "r", encoding="utf8") as file:
     parse_string = ""
     for line in file:
         if line == "\n":
@@ -22,7 +27,7 @@ with open("test_parse.txt", "r", encoding="utf8") as file:
                 parse_string = ""
         else:
             parse_string += line
-with open("test_qg_results.txt", "r", encoding="utf8") as file:
+with open(os.path.join(current_dir, "test_qg_results.txt"), "r", encoding="utf8") as file:
     for line in file:
         line = line.strip()
         num, question, answer = line.split("\t")
