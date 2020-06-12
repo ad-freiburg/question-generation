@@ -75,6 +75,18 @@ class Entity:
         """
         return re.sub(r"(_|\s)\(.*\).*", "", self.name)
 
+    def plain_name(self):
+        """Returns the entity name without disambiguation and without
+        underscores.
+
+        Returns:
+            str: plain entity name
+        """
+        plain_name = re.sub(r"(_|\s)\(.*\).*", "", self.name)
+        plain_name = plain_name.replace("__", ": ")
+        plain_name = plain_name.replace("_", " ")
+        return plain_name
+
     def parseable_name(self):
         """Returns the parseable name of the entity, e.g. the name in such a way
         that it will not be separated by the parser but treated as single word.
