@@ -189,10 +189,10 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--question_file", type=str,
+    parser.add_argument("--question_file", type=str, required=True,
                         help="FQ File containing filtered questions")
 
-    parser.add_argument("--output_file", type=str,
+    parser.add_argument("--output_file", type=str, required=True,
                         help="Output file")
 
     parser.add_argument("--clueweb", default=False, action="store_true",

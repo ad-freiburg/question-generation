@@ -27,13 +27,13 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-src", "--source_file", type=str, default=None,
+    parser.add_argument("-src", "--source_file", type=str, required=True,
                         help="Source json file")
 
-    parser.add_argument("-gq", "--gq_file", type=str, default=None,
+    parser.add_argument("-gq", "--gq_file", type=str, required=True,
                         help="Generated question file")
 
-    parser.add_argument("-out", "--output_file", type=str, default=None,
+    parser.add_argument("-out", "--output_file", type=str, required=True,
                         help="Output file for random samples")
 
     main(parser.parse_args())

@@ -72,14 +72,20 @@ def main(args):
 if __name__ == "__main__":
     # Handle command line arguments
     parser = argparse.ArgumentParser()
+
     parser.add_argument("-d", "--debug", default=False, action="store_true",
                         help="Print additional information for debugging.")
+
     parser.add_argument("-s", "--source_column", type=int, default=1,
                         help="Column of the source sentence in the input file")
+
     parser.add_argument("--separator", type=str, default="\t",
                         help="Column separator")
-    parser.add_argument("--source_file", type=str, default=None,
+
+    parser.add_argument("--source_file", type=str, required=True,
                         help="The source sentence file")
+
     parser.add_argument("--max_lines", type=int, default=2000000,
                         help="Maximum number of source sentences covered in the input questions")
+
     main(parser.parse_args())

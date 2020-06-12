@@ -99,7 +99,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-in", "--input_file", type=str, default=None,
+    parser.add_argument("-in", "--input_file", type=str, required=True,
                         help="Input json file")
 
     parser.add_argument("-out", "--output_file", type=str, default=None,
