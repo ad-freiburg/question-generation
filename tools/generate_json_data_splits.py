@@ -57,24 +57,25 @@ def get_data_splits(input_file, output_prefix, split_sizes):
         current_idx = 0
         source = json.load(f, object_pairs_hook=OrderedDict)
         curr_size = 0
-        for para in source["data"][0]["paragraphs"]:
-            if curr_size + len(para["qas"]) < split_sizes[current_idx]:
-                subsets[current_idx]["data"][0]["paragraphs"].append(para)
-                curr_size += len(para["qas"])
-            else:
-                remainder_para = copy.deepcopy(para)
-                remainder_para["qas"] = []
-                while curr_size + len(para["qas"]) > split_sizes[current_idx]:
-                    remainder_para["qas"].append(para["qas"][-1])
-                    del para["qas"][-1]
-                subsets[current_idx]["data"][0]["paragraphs"].append(para)
-                curr_size = 0
-                current_idx += 1
-                if current_idx >= len(files):
-                    break
-                # TODO: This can cause discrepancies when the size is smaller than the remainder para
-                subsets[current_idx]["data"][0]["paragraphs"].append(remainder_para)
-                curr_size += len(remainder_para["qas"])
+        for article in source["data"]:
+            for para in article["paragraphs"]:
+                if curr_size + len(para["qas"]) < split_sizes[current_idx]:
+                    subsets[current_idx]["data"][0]["paragraphs"].append(para)
+                    curr_size += len(para["qas"])
+                else:
+                    remainder_para = copy.deepcopy(para)
+                    remainder_para["qas"] = []
+                    while curr_size + len(para["qas"]) > split_sizes[current_idx]:
+                        remainder_para["qas"].append(para["qas"][-1])
+                        del para["qas"][-1]
+                    subsets[current_idx]["data"][0]["paragraphs"].append(para)
+                    curr_size = 0
+                    current_idx += 1
+                    if current_idx >= len(files):
+                        break
+                    # TODO: This can cause discrepancies when the size is smaller than the remainder para
+                    subsets[current_idx]["data"][0]["paragraphs"].append(remainder_para)
+                    curr_size += len(remainder_para["qas"])
 
     for i in range(len(files)):
         question_count = 0
