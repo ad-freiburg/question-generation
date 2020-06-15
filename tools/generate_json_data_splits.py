@@ -2,7 +2,7 @@
 Copyright 2020, University of Freiburg
 Author: Natalie Prange <prange@cs.uni-freiburg.de>
 
-Generate a random subset of the json file in SQuAD format.
+Generate a random subset of the json file in SQuAD/Aqqu format.
 Or split the json file into three subsets: train, dev and test of given size.
 """
 
@@ -19,7 +19,19 @@ logger = logging.getLogger(__name__)
 random.seed(1662)
 
 
-def get_random_samples(input_file, output_file, sample_size):
+def get_random_samples_aqqu(input_file, output_file, sample_size, single_line):
+    indent = None if single_line else 2
+    output_file = open(output_file, "w", encoding="latin1")
+    random_subset = dict({"Questions": []})
+    with open(input_file, "r", encoding="latin1") as f:
+        source = json.load(f, object_pairs_hook=OrderedDict)
+        random_subset["Questions"] = random.sample(source["Questions"], min(sample_size, len(source["Questions"])))
+        logger.info("Number of questions: %d" % (len(random_subset["Questions"])))
+        json.dump(random_subset, output_file, indent=indent)
+
+
+def get_random_samples(input_file, output_file, sample_size, single_line):
+    indent = None if single_line else 2
     output_file = open(output_file, "w", encoding="latin1")
     random_subset = dict({"data": [{"title": "X"}]})
     sized_random_subset = dict({"data": [{"title": "X", "paragraphs": []}]})
@@ -45,10 +57,28 @@ def get_random_samples(input_file, output_file, sample_size):
                 question_count += 1
         logger.info("Number of questions: %d. Number of contexts: %d"
                     % (question_count, len(sized_random_subset["data"][0]["paragraphs"])))
-        json.dump(sized_random_subset, output_file)
+        json.dump(sized_random_subset, output_file, indent=indent)
 
 
-def get_data_splits(input_file, output_prefix, split_sizes):
+def get_data_splits_aqqu(input_file, output_prefix, split_sizes, single_line):
+    indent = None if single_line else 2
+    files = [output_prefix + "_train.json",
+             output_prefix + "_dev.json",
+             output_prefix + "_test.json"]
+    with open(input_file, "r", encoding="latin1") as f:
+        source = json.load(f, object_pairs_hook=OrderedDict)
+        for i in range(len(files)):
+            subset = dict()
+            prev_size = sum(split_sizes[:i])
+            logger.debug("Array range: %d-%d" % (prev_size, prev_size + split_sizes[i]))
+            subset["Questions"] = source["Questions"][prev_size:prev_size + split_sizes[i]]
+            logger.info("Number of questions: %d" % (len(subset["Questions"])))
+            json.dump(subset, open(files[i], "w", encoding="latin1"), indent=indent)
+            logger.info("Generated file %s" % files[i])
+
+
+def get_data_splits(input_file, output_prefix, split_sizes, single_line):
+    indent = None if single_line else 2
     files = [output_prefix + "_train.json",
              output_prefix + "_dev.json",
              output_prefix + "_test.json"]
@@ -84,16 +114,22 @@ def get_data_splits(input_file, output_prefix, split_sizes):
                 question_count += 1
         logger.info("Number of questions: %d. Number of contexts: %d"
                     % (question_count, len(subsets[i]["data"][0]["paragraphs"])))
-        json.dump(subsets[i], open(files[i], "w", encoding="latin1"))
+        json.dump(subsets[i], open(files[i], "w", encoding="latin1"), indent=indent)
         logger.info("Generated file %s" % files[i])
 
 
 def main(args):
     if args.get_splits:
         sizes = [args.train_size, args.dev_size, args.test_size]
-        get_data_splits(args.input_file, args.output_prefix, sizes)
+        if args.aqqu_format:
+            get_data_splits_aqqu(args.input_file, args.output_prefix, sizes, args.single_line)
+        else:
+            get_data_splits(args.input_file, args.output_prefix, sizes, args.single_line)
     else:
-        get_random_samples(args.input_file, args.output_file, args.num_samples)
+        if args.aqqu_format:
+            get_random_samples_aqqu(args.input_file, args.output_file, args.num_samples, args.single_line)
+        else:
+            get_random_samples(args.input_file, args.output_file, args.num_samples, args.single_line)
 
 
 if __name__ == "__main__":
@@ -105,7 +141,7 @@ if __name__ == "__main__":
     parser.add_argument("-out", "--output_file", type=str, default=None,
                         help="Output file for random samples")
 
-    parser.add_argument("--num_samples", type=int, default=100000,
+    parser.add_argument("-n", "--num_samples", type=int, default=100000,
                         help="Number of random samples")
 
     parser.add_argument("--get_splits", default=False, action="store_true",
@@ -122,5 +158,11 @@ if __name__ == "__main__":
 
     parser.add_argument("--test_size", type=int, default=10000,
                         help="Number of test samples")
+
+    parser.add_argument("-aqqu", "--aqqu-format", default=False, action="store_true",
+                        help="Input json is in Aqqu format.")
+
+    parser.add_argument("--single-line", default=False, action="store_true",
+                        help="Instead of pretty-printing put result into a single line.")
 
     main(parser.parse_args())
