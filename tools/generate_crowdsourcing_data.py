@@ -143,8 +143,8 @@ def main(args):
             line = input("")
             lst = line.split(args.separator)
 
-            if len(lst) - 1 < max(q_col, a_col, s_col):
-                logger.error("column index out of bounds: %d > %d" % (max(q_col, a_col, s_col), len(lst)))
+            if len(lst) - 1 < max(q_col, a_col, s_col, l_col):
+                logger.error("column index out of bounds: %d > %d" % (max(q_col, a_col, s_col, l_col), len(lst)))
                 exit(1)
 
             question = lst[q_col]
