@@ -9,7 +9,6 @@ Or add Wikidata label and category for entities of the format [Q123||<original>]
 import logging
 import re
 import time
-import config
 import argparse
 import os
 import sys
@@ -19,6 +18,7 @@ current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 from entity import Entity
+import config
 
 # Set up the logger
 logging.basicConfig(format='%(asctime)s: %(message)s', datefmt="%H:%M:%S", level=logging.INFO)
