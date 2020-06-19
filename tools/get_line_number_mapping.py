@@ -6,12 +6,18 @@ Get mapping between source sentence file and line numbers in generated questions
 (They differ since the dependency parse discards some lines.)
 """
 import re
-import sys
 import time
 import logging
 import spacy
 import en_core_web_md
+import os
+import sys
+import inspect
+import argparse
 
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
 from utils import clean_sentence
 
 # Set up the logger
@@ -109,8 +115,7 @@ class SpacyParser:
         doc = set_sent_starts(doc, self.nlp)
 
         # Bring the sentence into conll_6 format
-        string, error = self.entity_assignment(doc, entities)
-        return error or not string
+        return self.entity_assignment(doc, entities)
 
     def entity_assignment(self, doc, entities):
         """Puts a SpaCy-parse into conll-6 format.
@@ -123,11 +128,13 @@ class SpacyParser:
         entities - a list of entities as returned by clean_sentence()
         """
         if not doc:
-            return "", False
+            return 0
         entity_by_address = dict([(e.address, e) for e in entities])
         num_tokens = 0
+        num_sents = 0
 
         for sent in doc.sents:
+            num_sents += 1
             for i, word in enumerate(sent):
                 # Count the number of tokens over all detected sentences
                 num_tokens += 1
@@ -140,27 +147,19 @@ class SpacyParser:
                             and str(word) != entity.original:
                         logger.debug("Entity assignment went wrong. Entity: %s, Word: %s\n\tIn sentence: %s"
                                      % (entity.parseable_name(), word, doc))
-                        return "", True
+                        return 0
 
-                string = "imastring"
-
-        return string, False
+        return num_sents
 
 
-if __name__ == "__main__":
-    if len(sys.argv) not in [1, 2]:
-        logger.warning("Usage: python3 %s [--debug]" % sys.argv[0])
-        exit()
-
-    if len(sys.argv) == 2:
-        if sys.argv[1] == "--debug" or sys.argv[1] == "-d":
-            logger.setLevel(logging.DEBUG)
-        else:
-            logger.warning("Unknown argument: '%s'" % sys.argv[1])
+def main(args):
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
 
     p = SpacyParser()
 
     num_lines = 0
+    num_parses = 0
     num_errors = 0
     start = time.time()
 
@@ -171,6 +170,7 @@ if __name__ == "__main__":
             if line == "quit":
                 exit()
 
+            """
             error = p.parse_line(line)
 
             if error:
@@ -178,6 +178,18 @@ if __name__ == "__main__":
             else:
                 num_lines += 1
             print("%d\t%d" % (num_lines, num_lines+num_errors))
+            """
+
+            num_sents = p.parse_line(line)
+            if num_sents == 0:
+                num_errors += 1
+                # TODO: only for comparison
+                print("%d\t%d" % (num_parses, num_lines + num_errors))
+            else:
+                num_lines += 1
+            for i in range(num_sents):
+                print("%d\t%d" % (num_parses + i + 1, num_lines + num_errors))
+            num_parses += num_sents
 
             if num_lines % 100000 == 0:
                 t = (time.time() - start) / 60
@@ -188,3 +200,12 @@ if __name__ == "__main__":
             logger.info("Read EOF. Parsed %d lines in %f seconds." % (num_lines, t))
             logger.info("Number of sentences skipped due to errors: %d" % num_errors)
             exit()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-d", "--debug", default=False, action="store_true",
+                        help="Print additional information for debugging.")
+
+    main(parser.parse_args())
