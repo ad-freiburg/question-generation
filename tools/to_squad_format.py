@@ -267,8 +267,9 @@ def main(args):
 
             if prev_context != context:
                 print('{"context": ' + json.dumps(context) + ', "qas": [', end="")
+            answer = answer if args.keep_answer_entity else new_answer
             print('{"answers": ', end="")
-            print('[{"answer_start": ' + str(answer_start) + ', "text": ' + json.dumps(new_answer) + '}], ', end="")
+            print('[{"answer_start": ' + str(answer_start) + ', "text": ' + json.dumps(answer) + '}], ', end="")
             print('"id": "' + str(sentence_count) + '", ', end="")
             print('"question": ' + json.dumps(new_question) + '}', end="")
 
@@ -326,5 +327,8 @@ if __name__ == "__main__":
 
     parser.add_argument("--skip_problematic_lines", default=False, action="store_true",
                         help="Keep lines where an answer could not be found.")
+
+    parser.add_argument("--keep_answer_entity", default=False, action="store_true",
+                        help="Keep entities in the answer.")
 
     main(parser.parse_args())
