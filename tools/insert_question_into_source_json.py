@@ -21,7 +21,7 @@ def main(args):
                 for k in range(len(source["data"][i]["paragraphs"][j]["qas"])):
                     question = question_file.readline().strip()
                     source["data"][i]["paragraphs"][j]["qas"][k]["question"] = question
-        json.dump(source, outfile)
+        json.dump(source, outfile, indent=2)
 
 
 if __name__ == "__main__":
