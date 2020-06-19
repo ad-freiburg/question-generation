@@ -48,9 +48,7 @@ def replace_entity_mentions(text, regard_entity_name):
         if regard_entity_name:
             new_text = new_text.replace(ent.to_entity_format(), ent.plain_name())
         else:
-            logger.debug("ent: %s" % ent.to_entity_format)
             new_text = new_text.replace(ent.to_entity_format(), ent.original)
-            logger.debug("new text: %s" % new_text)
     return new_text
 
 
@@ -115,6 +113,58 @@ def get_date(text):
     return date_string
 
 
+def text2int(textnum):
+    numwords = {}
+    units = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",
+             "twelve", "thirteen", "fourteen", "fifteen","sixteen", "seventeen", "eighteen", "nineteen"]
+
+    tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+
+    scales = ["hundred", "thousand", "million", "billion", "trillion"]
+
+    numwords["and"] = (1, 0)
+    for idx, word in enumerate(units):    numwords[word] = (1, idx)
+    for idx, word in enumerate(tens):     numwords[word] = (1, idx * 10)
+    for idx, word in enumerate(scales):   numwords[word] = (10 ** (idx * 3 or 2), 0)
+
+    current = result = 0
+    no_number_found = True
+    for word in re.split(r"[ -]", textnum):
+        if word not in numwords:
+            if current == result == 0:
+                continue
+            else:
+                # Only take the first number occurrence
+                break
+        no_number_found = False
+        scale, increment = numwords[word]
+        current = current * scale + increment
+        if scale > 100:
+            result += current
+            current = 0
+
+    if no_number_found:
+        return None
+
+    return result + current
+
+
+def get_number(string):
+    match = re.search(r"[\d][\d,.]*", string)
+    if match:
+        num_string = match.group(0)
+        num_string = num_string.replace(",", "")
+        if '.' in num_string:
+            try:
+                return float(num_string)
+            except ValueError:
+                return None
+        return int(num_string)
+    else:
+        num = text2int(string)
+        return num
+
+
 def main(args):
     q_col = args.question_column
     a_col = args.answer_column
@@ -129,6 +179,13 @@ def main(args):
     name_to_mid = read_name_to_mid_file()
 
     sentence_count = 0
+    dates_count = 0
+    discarded_dates_count = 0
+    numbers_count = 0
+    discarded_numbers_count = 0
+    entities_count = 0
+    discarded_entities_count = 0
+
     start = time.time()
     logger.info("Ready for input.")
     json_obj = dict()
@@ -157,32 +214,66 @@ def main(args):
 
             parses_dict = dict()
             parses_dict["ParseId"] = str(sentence_count) + ".P0"
+            # Add keys whose value is not needed but which need to be to prevent a key error
+            parses_dict["Sparql"] = None
+            parses_dict["InferentialChain"] = None
+            parses_dict["TopicEntityMid"] = None
+            parses_dict["Constraints"] = None
             parses_dict["Answers"] = list()
 
             answer_entities = Entity.get_entities(answer)
             answer_categories = [e.category for e in answer_entities]
             answer_names = {e.name for e in answer_entities}
-            if not answer_entities or answer_names.intersection(MONTH_MAP.keys()) \
+            date = False
+            number = False
+            answers_dict = dict()
+            if answer_names.intersection(MONTH_MAP.keys()) \
                     or "Year" in answer_categories or "when" == question.split(" ")[0].lower():
-                answers_dict = dict()
+                dates_count += 1
                 date_string = get_date(answer)
                 if not date_string:
+                    logger.debug("Discarded date: %s\t%s" % (question, answer))
+                    discarded_dates_count += 1
                     continue
                 answers_dict["AnswerArgument"] = date_string
                 answers_dict["AnswerType"] = "Value"
                 answers_dict["EntityName"] = None
                 parses_dict["Answers"].append(answers_dict)
+                date = True
+            elif "how" == question.split(" ")[0].lower():
+                numbers_count += 1
+                number_string = get_number(answer)
+                if not number_string:
+                    discarded_numbers_count += 1
+                    continue
+                answers_dict["AnswerArgument"] = number_string
+                answers_dict["AnswerType"] = "Value"
+                answers_dict["EntityName"] = None
+                parses_dict["Answers"].append(answers_dict)
+                number = True
             else:
+                entities_count += 1
                 for ent in answer_entities:
                     answers_dict = dict()
                     if ent.name in name_to_mid:
                         answers_dict["AnswerType"] = "Entity"
                         answers_dict["AnswerArgument"] = name_to_mid[ent.name]
                         answers_dict["EntityName"] = ent.name
-                    parses_dict["Answers"].append(answers_dict)
+                        parses_dict["Answers"].append(answers_dict)
 
             if not answers_dict:
+                discarded_entities_count += 1
                 continue
+
+            # Entity answers will be discarded more often due to missing name to mid mapping. However, the ratio
+            # between entity answers and number/date answers should not be changed by this to-aqqu-format-formatting
+            if dates_count and entities_count and numbers_count:
+                if date and discarded_dates_count / dates_count < discarded_entities_count / entities_count:
+                    discarded_dates_count += 1
+                    continue
+                if number and discarded_numbers_count / numbers_count < discarded_entities_count / entities_count:
+                    discarded_numbers_count += 1
+                    continue
 
             question_dict["Parses"].append(parses_dict)
             json_obj["Questions"].append(question_dict)
@@ -193,6 +284,9 @@ def main(args):
                 logger.info("Processed %d questions in %f minutes.." % (sentence_count, t))
 
         except EOFError:
+            logger.info("%f" % (discarded_dates_count / dates_count))
+            logger.info("%f" % (discarded_numbers_count / numbers_count))
+            logger.info("%f" % (discarded_entities_count / entities_count))
             print(json.dumps(json_obj, indent=2))
             logger.info("Read EOF. Processed %d questions in %f seconds" % (sentence_count, time.time() - start))
             exit()
