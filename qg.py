@@ -466,9 +466,7 @@ class QuestionGenerator:
     Entity mentions are in the format [<entity_name>|<category>|<original word>]
     """
 
-    def __init__(self, parse_input, regard_entity_name):
-        if parse_input:
-            self.spacy_parser = SpacyParser()
+    def __init__(self, regard_entity_name):
         self.lemmatizer = WordNetLemmatizer()
         self.stemmer = SnowballStemmer('english')
         self.name_to_type_ids = defaultdict(list)
@@ -709,6 +707,11 @@ class QuestionGenerator:
         # Get subtree from the head of the node if it's a pobj to include prepositions in the answer
         if node['rel'] == "pobj":
             node = dep_graph.get_by_address(node['head'])
+            """ TODO: for entity-only answer
+            if dep_graph.get_by_address(node['head'])['word'].lower() == "from":
+                node = dep_graph.get_by_address(node['head'])
+            pass
+            """
 
         # Add answer entity dependencies to the answer
         subtree = dep_graph.get_subtree(node)
@@ -718,6 +721,10 @@ class QuestionGenerator:
         sublist = sorted(subtree, key=lambda x: x['address'])
         sublist = get_str_list_from_node_list(sublist, mask_entities=False, append_poss_s=self.regard_entity_name)
         sublist = [tok if tok != COMMA_MASK else "," for tok in sublist]
+        """TODO: for entity-only answer:
+        if not date:
+            return ' '.join(get_str_list_from_node_list([node], mask_entities=False, append_poss_s=self.regard_entity_name))
+        """
         return " ".join(sublist)
 
     def form_question(self, word_list, wh_words, answer):
@@ -1158,26 +1165,20 @@ class QuestionGenerator:
                 questions += self.form_question(q_list, wh_words, answer)
         return questions
 
-    def generate_question(self, sentence, parse_input):
+    def generate_question(self, parsed_sentence):
         """Generates questions from a given sentence.
 
         Args:
-            sentence (str): the sentence
-            parse_input (bool): if True parse the input. Otherwise assume input is already parsed
+            parsed_sentence (str): the sentence
 
         Returns:
             tuple: list of generated questions and the original sentence as string
         """
         # Pre-processing
-        logger.debug("%s" % sentence)
-        if parse_input:
-            sentence = self.spacy_parser.parse_line(sentence)
-            logger.debug("parse: %s" % sentence)
-
-        if not sentence:
+        if not parsed_sentence:
             return [], None
 
-        dep_graph = get_dependency_graph(sentence)
+        dep_graph = get_dependency_graph(parsed_sentence)
         original_sentence = dep_graph.to_sentence()
 
         # Questions from sentences with a ":" are often weird
@@ -1218,32 +1219,42 @@ def main(args):
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
-    generator = QuestionGenerator(args.parse_input, args.regard_entity_name)
+    if args.parse_input:
+        spacy_parser = SpacyParser(args.spacy_sent_tokenizer)
+
+    generator = QuestionGenerator(args.regard_entity_name)
     num_questions = 0
     sentence_count = 0
     start = time.time()
     logger.info("Ready for input.")
     while True:
         try:
-            if not args.parse_input:
+            if args.parse_input:
+                line = input("")
+                lines = spacy_parser.parse_line(line)
+            else:
                 # Read all lines up to an empty line into the string
                 sentinel = ''
-                line = '\n'.join(iter(input, sentinel))
-            else:
-                line = input("")
+                lines = '\n'.join(iter(input, sentinel))
+            logger.debug("parse: %s" % lines)
 
-            sentence_count += 1
-            questions, original_sent = generator.generate_question(line, args.parse_input)
-            if args.parse_input:
-                original_sent = line.strip("\n")
-            for q in questions:
-                num_questions += 1
-                print("%d\t%s\t%s\t%s" % (sentence_count, q[0], q[1], original_sent))
+            if not lines:
+                continue
 
-            if sentence_count % 100000 == 0:
-                t = (time.time() - start) / 60
-                logger.info("Processed %d sentences." % sentence_count)
-                logger.info("Generated %d questions in %f minutes." % (num_questions, t))
+            for sentence_parse in lines.split("\n\n"):
+                sentence_count += 1
+                questions, original_sent = generator.generate_question(sentence_parse)
+
+                if args.parse_input:
+                    original_sent = line.strip("\n")
+                for q in questions:
+                    num_questions += 1
+                    print("%d\t%s\t%s\t%s" % (sentence_count, q[0], q[1], original_sent))
+
+                if sentence_count % 100000 == 0:
+                    t = (time.time() - start) / 60
+                    logger.info("Processed %d sentences." % sentence_count)
+                    logger.info("Generated %d questions in %f minutes." % (num_questions, t))
 
         except EOFError:
             logger.info("Read EOF. Generated %d questions from %d sentences in %f seconds" %
@@ -1254,11 +1265,19 @@ def main(args):
 if __name__ == "__main__":
     # Handle command line arguments
     parser = argparse.ArgumentParser()
+
     parser.add_argument("-d", "--debug", default=False, action="store_true",
                         help="Print additional information for debugging.")
+
     parser.add_argument("-p", "--parse_input", default=False, action="store_true",
                         help="Parse the input. Set to true if your input is not a dependency parse")
-    parser.add_argument("--regard_entity_name", default=False, action="store_true",
+
+    parser.add_argument("--spacy_sent_tokenizer", default=False, action="store_true",
+                        help="Use the spacy sentence tokenizer instead of assuming one sentence per line")
+
+    parser.add_argument("-ren", "--regard_entity_name", default=False, action="store_true",
                         help="Set to true if the entity name should be regarded instead of the original word in the "
                              "final sentence")
+
+
     main(parser.parse_args())

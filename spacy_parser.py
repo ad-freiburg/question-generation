@@ -112,8 +112,9 @@ def to_conll_6(doc, entities):
 
 
 class SpacyParser:
-    def __init__(self):
+    def __init__(self, spacy_sent_tokenizer=False):
         logger.info("Initializing spaCy parser...")
+        self.spacy_sent_tokenizer = spacy_sent_tokenizer
         self.nlp = en_core_web_md.load()
         self.init_tokenizer()
 
@@ -152,7 +153,7 @@ class SpacyParser:
 
         # Prevent SpacyParser from running out of memory
         length = len(sent.split())
-        if length > MAX_LENGTH:
+        if length > MAX_LENGTH and not self.spacy_sent_tokenizer:
             logger.warning("Skipping line with %d tokens" % length)
             return
 
@@ -163,7 +164,8 @@ class SpacyParser:
             logger.debug("Skipping line due to AssertionError: %s" % sent)
             return
 
-        doc = set_sent_starts(doc)
+        if not self.spacy_sent_tokenizer:
+            doc = set_sent_starts(doc)
 
         self.nlp.tagger(doc)
         self.nlp.parser(doc)
@@ -177,7 +179,7 @@ def main(args):
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
-    dep_parser = SpacyParser()
+    dep_parser = SpacyParser(spacy_sent_tokenizer=args.spacy_sent_tokenizer)
     num_lines = 0
     num_errors = 0
     start = time.time()
@@ -207,6 +209,11 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+
     parser.add_argument("-d", "--debug", default=False, action="store_true",
                         help="Print additional information for debugging.")
+
+    parser.add_argument("--spacy_sent_tokenizer", default=False, action="store_true",
+                        help="Use the spacy sentence tokenizer instead of assuming one sentence per line.")
+
     main(parser.parse_args())
