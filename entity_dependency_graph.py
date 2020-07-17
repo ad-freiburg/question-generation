@@ -5,7 +5,7 @@ import re
 import logging
 from collections import defaultdict
 from nltk.parse.dependencygraph import DependencyGraph
-from nltk.compat import string_types
+from six import string_types
 from entity import Entity
 
 # Set up the logger
