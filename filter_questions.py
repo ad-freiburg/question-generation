@@ -643,7 +643,7 @@ if __name__ == "__main__":
                         help="Entities in input sentences are from Wikidata")
     parser.add_argument("-f", "--filter_file", default="", type=str,
                         help="File path to which filtered out questions and the corresponding filter are written")
-    parser.add_argument("--regard_entity_name", default=False, action="store_true",
+    parser.add_argument("-ren", "--regard_entity_name", default=False, action="store_true",
                         help="Set to true if the entity name should be regarded instead of the original word in the "
                              "final sentence")
     main(parser.parse_args())
