@@ -8,19 +8,24 @@ class Entity:
     """A class representing an entity
     """
     ANNOTATED_ENTITY_PATTERN = re.compile(r"\[([^\]\[|]*?)\|([^\]\[|]*?)\|([^\]\[|]*?)\]")
+    UNANNOTATED_ENTITY_PATTERN = re.compile(r"\[([^\]\[|]*?)\|([^\]\[|]*?)\]")
 
-    def __init__(self, name, category, original, address=None):
+    def __init__(self, name, category, original, address=None, id=None):
         self.name = name
         self.category = category
         self.original = original
         self.address = address
+        self.id = id
 
     def __str__(self):
         address = self.address
         if not address:
             address = -1
+        id = self.id
+        if not id:
+            id = None
 
-        return '("%s", "%s", "%s", %d)' % (self.name, self.category, self.original, address)
+        return '("%s", "%s", "%s", %d, "%s")' % (self.name, self.category, self.original, address, id)
 
     @classmethod
     def to_entity(cls, string):
@@ -95,8 +100,21 @@ class Entity:
             str: parseable entity name
         """
         name = self.remove_disambiguation()
+        name = re.sub(r" ", "_", name)
         name = re.sub(r"\W", "", name)
         return name
+
+    def parseable_original(self):
+        """Returns the parseable original word of the entity, e.g. the original
+         word in such a way that it will not be separated by the parser but
+         treated as single word.
+
+        Returns:
+            str: parseable entity original
+        """
+        original = re.sub(r" ", "_", self.original)
+        original = re.sub(r"\W", "", original)
+        return original
 
     def to_entity_format(self, include_orig=True, nospace_category=False):
         """Returns the entity in the format [<name>|<category|<original>].
@@ -113,7 +131,12 @@ class Entity:
         category = self.category
         if nospace_category:
             category = self.category.replace(" ", "_")
+
+        name = self.name
+        if self.id:
+            name = self.id + ":" + self.name
+
         if include_orig:
-            return "[" + self.name + "|" + category + "|" + \
+            return "[" + name + "|" + category + "|" + \
                     self.original + "]"
-        return "[" + self.name + "|" + category + "]"
+        return "[" + name + "|" + category + "]"

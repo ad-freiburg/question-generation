@@ -977,7 +977,7 @@ class QuestionGenerator:
             for sn in new_subtree:
                 sn_ent = sn['entity']
                 if sn['rel'] == 'pobj' and "Where" in wh_words and sn_ent is not None \
-                        and sn_ent.category == "Location":
+                        and (sn_ent.category == "Location" or sn_ent.category.endswith("geographic_entity")):
                     skip_phrase = True
                     break
             if skip_phrase:
@@ -1056,8 +1056,9 @@ class QuestionGenerator:
                     continue
 
                 # head of a pobj is not always a prep.
-                if entity is not None and entity.category == "Location" and head['rel'] == "prep" \
-                        and head['tag'] in ["IN", "RP"]:
+                if entity is not None and (entity.category == "Location" or
+                                           entity.category.endswith("geographic_entity")) \
+                        and head['rel'] == "prep" and head['tag'] in ["IN", "RP"]:
                     # Only form question if the head preposition is not "for"
                     # to avoid sth like:
                     # "Where did [Ayn_Rand|Person|She] set out ?" --> Hollywood
@@ -1220,7 +1221,7 @@ def main(args):
         logger.setLevel(logging.DEBUG)
 
     if args.parse_input:
-        spacy_parser = SpacyParser(args.spacy_sent_tokenizer)
+        spacy_parser = SpacyParser(args.spacy_sent_tokenizer, args.wikidata)
 
     generator = QuestionGenerator(args.regard_entity_name)
     num_questions = 0
@@ -1245,8 +1246,6 @@ def main(args):
                 sentence_count += 1
                 questions, original_sent = generator.generate_question(sentence_parse)
 
-                if args.parse_input:
-                    original_sent = line.strip("\n")
                 for q in questions:
                     num_questions += 1
                     print("%d\t%s\t%s\t%s" % (sentence_count, q[0], q[1], original_sent))
@@ -1279,5 +1278,7 @@ if __name__ == "__main__":
                         help="Set to true if the entity name should be regarded instead of the original word in the "
                              "final sentence")
 
+    parser.add_argument("-wd", "--wikidata", default=False, action="store_true",
+                        help="Input entities are Wikidata entities")
 
     main(parser.parse_args())

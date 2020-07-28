@@ -90,10 +90,17 @@ class EntityDependencyGraph(DependencyGraph):
                 head += 1
 
             if entity_string:
-                pat = re.compile(r"\(\"(.*)\", \"(.*)\", \"(.*)\", (\d*)\)")
+                pat = re.compile(r"\(\"(.*)\", \"(.*)\", \"(.*)\", (\d*), \"(.*)\"\)")
                 entity_tuple = re.findall(pat, entity_string)
-                name, category, original, address = entity_tuple[0]
-                entity = Entity(name, category, original, int(address))
+                if entity_tuple:
+                    name, category, original, address, id = entity_tuple[0]
+                else:
+                    pat = re.compile(r"\(\"(.*)\", \"(.*)\", \"(.*)\", (\d*)\)")
+                    entity_tuple = re.findall(pat, entity_string)
+                    name, category, original, address = entity_tuple[0]
+                    id = None
+
+                entity = Entity(name, category, original, int(address), id)
             else:
                 entity = None
 

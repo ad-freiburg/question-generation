@@ -9,12 +9,11 @@ import inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
-from utils import clean_sentence
 from entity import Entity
 from collections import defaultdict
 from qg import QuestionGenerator, det_aux_word, get_plural, get_dependency_graph, recover_pronouns, rm_subclauses
 
-QG = QuestionGenerator(parse_input=False, regard_entity_name=False)
+QG = QuestionGenerator(regard_entity_name=False)
 
 PARSE = []
 QG_RESULTS = defaultdict(list)
@@ -59,23 +58,6 @@ class QGTest(unittest.TestCase):
         word = get_plural("tray")
         self.assertEqual("trays", word)
 
-    # Test dep_parse_sentence
-    def test_dep_parse_sentence(self):
-        qg_parse = QuestionGenerator(parse_input=True, regard_entity_name=False)
-        sent = "Mary has a dog ."
-        dep_graph = get_dependency_graph(qg_parse.spacy_parser.parse_line(sent))
-        n = dep_graph.nodes[2]
-        self.assertEqual('root', n['rel'])
-        self.assertEqual('has', n['word'])
-        self.assertEqual('VBZ', n['tag'])
-        self.assertEqual(0, n['head'])
-        self.assertEqual(2, n['address'])
-        self.assertEqual(None, n['entity'])
-
-        sent, ents = clean_sentence("[Mary_X|Person|Mary] has a dog .")
-        n = get_dependency_graph(qg_parse.spacy_parser.parse_line(sent)).nodes[1]
-        self.assertEqual(None, n['entity'])
-
     # Test det_wh_word
     def test_det_wh_word(self):
         # Alibi dep graph.
@@ -86,22 +68,22 @@ class QGTest(unittest.TestCase):
         e1 = Entity("Angela Merkel", "Person", "Angela")
         q_list = []
         q_list_city = ["city"]
-        res = QG.det_wh_word(e1, q_list, dep_graph.get_root(), False)
+        res = QG.det_wh_word(e1, q_list, dep_graph.get_root(), '')
         self.assertEqual(['Who'], res)
 
         e2 = Entity("Test Entity", "Event", "X")
-        res = QG.det_wh_word(e2, q_list, dep_graph.get_root(), False)
+        res = QG.det_wh_word(e2, q_list, dep_graph.get_root(), '')
         self.assertEqual(['What'], res)
 
         e3 = Entity("Potsdam", "Location", "Potsdam")
-        res = QG.det_wh_word(e3, q_list, dep_graph.get_root(), True)
+        res = QG.det_wh_word(e3, q_list, dep_graph.get_root(), 'nsubj')
         self.assertEqual(['Which german city', 'Which city', 'Which town', 'What'], res)
 
-        res = QG.det_wh_word(e3, q_list_city, dep_graph_city.get_root(), True)
+        res = QG.det_wh_word(e3, q_list_city, dep_graph_city.get_root(), 'nsubj')
         self.assertEqual(['Which german city', 'What'], res)
 
         e4 = Entity("Indian philosophy", "Field of Study", "Indian philosophies")
-        res = QG.det_wh_word(e4, q_list, dep_graph_pl.get_root(), True)
+        res = QG.det_wh_word(e4, q_list, dep_graph_pl.get_root(), 'nsubj')
         self.assertEqual(['Which fields of study', 'What'], res)
 
     # Test det_aux_word
@@ -177,7 +159,7 @@ class QGTest(unittest.TestCase):
     # Test question generation
     def test_generate_question(self):
         for i, parse_str in enumerate(PARSE):
-            questions, original = QG.generate_question(parse_str, False)
+            questions, original = QG.generate_question(parse_str)
             if i+1 in QG_RESULTS:
                 if len(questions) > 0:
                     self.assertEqual(QG_RESULTS[i+1], questions)
