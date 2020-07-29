@@ -30,6 +30,7 @@ QG_TYPES_PATH = config.QG_MAPPINGS + "qg_types.txt"
 MONTHS = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November",
           "December"}
 WHO_CATEGORIES = {"Person", "Fictional Character", "Musical Artist", "Musical Group", "Sports Team"}
+WHO_CATEGORIES_WD = {"sports team", "individual", "musical ensemble", "fictional character"}
 
 CONTEXT_WORDS = {"also", "then", "however", "instead", "therefore", "otherwise", "immediately", "later", "even"}
 INTR_PREP_PHRASE_CONTEXT_WORDS = {"next", "example"}
@@ -507,9 +508,20 @@ class QuestionGenerator:
         Returns:
             list: list of wh-words
         """
+        is_wd_who_category = False
+        if entity and "/" in entity.category:
+            categories = entity.category.split("/")
+            for c in categories:
+                if c.startswith("Q") and "_" in c:
+                    c_label = c.split("_", 1)[1]
+                    # logger.info("c_label: %s" % c_label)
+                    if c_label.replace("_", " ") in WHO_CATEGORIES_WD:
+                        is_wd_who_category = True
+                        break
+
         if answer_rel == 'nummod':
             wh_words = ['How many']
-        elif entity.category in WHO_CATEGORIES:
+        elif entity.category in WHO_CATEGORIES or is_wd_who_category:
             if answer_rel == 'poss':
                 wh_words = ['Whose']
             else:
