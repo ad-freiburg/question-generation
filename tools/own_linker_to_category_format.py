@@ -50,6 +50,10 @@ def read_files():
 
 
 def convert(line):
+    # Skip article title and empty lines
+    if line == "\n" or line.startswith("*****"):
+        return ""
+
     new_line = line
     for m in re.finditer(Entity.UNANNOTATED_ENTITY_PATTERN, line):
         qid_string = m.group(1)
@@ -70,6 +74,7 @@ def convert(line):
         name = qid + ":" + label
         repl_str = "[" + name + "|" + category + "|" + original + "]"
         new_line = new_line.replace(m.group(0), repl_str)
+
     return new_line
 
 
