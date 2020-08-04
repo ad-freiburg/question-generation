@@ -21,11 +21,7 @@ class CrowdSourcingAssignment:
     def assignment_reader(assignment_file: str) -> Iterator["CrowdSourcingAssignment"]:
         with open(assignment_file) as csv_file:
             csv_reader = csv.DictReader(csv_file, delimiter=',')
-            for i, row in enumerate(csv_reader):
-                # Skip column title row
-                if i == 0:
-                    continue
-
+            for row in csv_reader:
                 generated_question = GeneratedQuestion(row["Input.question"],
                                                        row["Input.answer"],
                                                        row["Input.paragraph"],
@@ -61,5 +57,5 @@ class CrowdSourcingAssignment:
                 assignment = CrowdSourcingAssignment(generated_question,
                                                      rating,
                                                      row["WorkerId"],
-                                                     row["WorkTimeInSeconds"])
+                                                     int(row["WorkTimeInSeconds"]))
                 yield assignment
