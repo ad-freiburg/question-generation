@@ -8,7 +8,7 @@ class Entity:
     """A class representing an entity
     """
     ANNOTATED_ENTITY_PATTERN = re.compile(r"\[([^\]\[|]*?)\|([^\]\[|]*?)\|([^\]\[|]*?)\]")
-    UNANNOTATED_ENTITY_PATTERN = re.compile(r"\[([^\]\[|]*?)\|([^\]\[|]*?)\]")
+    UNANNOTATED_ENTITY_PATTERN = re.compile(r"\[([^\]\[|]*?)\|([^\]\[]*?)\]")
 
     def __init__(self, name, category, original, address=None, id=None):
         self.name = name

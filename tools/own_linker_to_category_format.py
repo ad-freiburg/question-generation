@@ -51,13 +51,14 @@ def read_files():
 
 def convert(line):
     # Skip article title and empty lines
-    if line == "\n" or line.startswith("*****"):
+    if line == "\n" or re.match(r"\*\*\*\*\*.*\*\*\*\*\*", line) or re.match(r"\[\[.*\]\]", line):
         return ""
 
     new_line = line
     for m in re.finditer(Entity.UNANNOTATED_ENTITY_PATTERN, line):
         qid_string = m.group(1)
-        original = m.group(2)
+        # "|" in original words will cause problems since it is used as separator in entity tags
+        original = m.group(2).replace("|", " ")
         qid_end_idx = qid_string.find(";")
         qid = qid_string[:qid_end_idx]
         category = "unknown"
