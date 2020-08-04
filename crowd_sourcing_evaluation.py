@@ -5,7 +5,7 @@ from tools.question_rating import QuestionRatingValue
 
 def get_results(input_file):
     results = dict()
-    for assignment in CrowdSourcingAssignment.assignment_reader(input_file):
+    for assignment in CrowdSourcingAssignment.assignment_reader(input_file, True):
         if assignment.question.method not in results:
             results[assignment.question.method] = dict()
         for criteria, value in sorted(assignment.rating.items()):
@@ -17,6 +17,11 @@ def get_results(input_file):
 
 
 def print_results(results):
+    print("*"*100)
+    print("Crowd sourcing evaluation results")
+    print("Scores are computed as average scores where YES=2, BORDERLINE=1, NO/NA/NONE_SELECTED=0")
+    print("If a question was rated as not grammatical or not meaningful, all other criteria were set to N/A")
+    print("*"*100)
     for method, result in sorted(results.items()):
         print("%s:" % method)
         for criteria, ratings in sorted(result.items()):

@@ -3,12 +3,12 @@ from tools.crowd_sourcing_assignment import CrowdSourcingAssignment
 
 
 def main(args):
-    for assignment in CrowdSourcingAssignment.assignment_reader(args.input_file):
+    for assignment in CrowdSourcingAssignment.assignment_reader(args.input_file, False):
         if args.worker_id and assignment.worker_id != args.worker_id:
             continue
         if args.question_id and assignment.question.question_id != args.question_id:
             continue
-        print("*" * 80)
+        print("*" * 100)
         print(assignment.question.question)
         print(assignment.question.answer)
         print("---")

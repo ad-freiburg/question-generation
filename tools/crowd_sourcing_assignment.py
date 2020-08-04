@@ -18,7 +18,7 @@ class CrowdSourcingAssignment:
         self.work_time = work_time
 
     @staticmethod
-    def assignment_reader(assignment_file: str) -> Iterator["CrowdSourcingAssignment"]:
+    def assignment_reader(assignment_file: str, adjust_to_na: bool) -> Iterator["CrowdSourcingAssignment"]:
         with open(assignment_file) as csv_file:
             csv_reader = csv.DictReader(csv_file, delimiter=',')
             for row in csv_reader:
@@ -46,13 +46,14 @@ class CrowdSourcingAssignment:
                             rating[c] = QuestionRatingValue.NONE_SELECTED
 
                 # If question was rated as not grammatical or not meaningful, set all other criteria to N/A
-                ignore_next = {QuestionRatingValue.NO, QuestionRatingValue.NA, QuestionRatingValue.NONE_SELECTED}
-                if rating[QuestionRatingCriteria.GRAMMAR] in ignore_next:
-                    rating[QuestionRatingCriteria.MEANINGFULNESS] = QuestionRatingValue.NA
-                if rating[QuestionRatingCriteria.MEANINGFULNESS] in ignore_next:
-                    rating[QuestionRatingCriteria.NATURALNESS] = QuestionRatingValue.NA
-                    rating[QuestionRatingCriteria.VALIDITY] = QuestionRatingValue.NA
-                    rating[QuestionRatingCriteria.SPECIFICITY] = QuestionRatingValue.NA
+                if adjust_to_na:
+                    ignore_next = {QuestionRatingValue.NO, QuestionRatingValue.NA, QuestionRatingValue.NONE_SELECTED}
+                    if rating[QuestionRatingCriteria.GRAMMAR] in ignore_next:
+                        rating[QuestionRatingCriteria.MEANINGFULNESS] = QuestionRatingValue.NA
+                    if rating[QuestionRatingCriteria.MEANINGFULNESS] in ignore_next:
+                        rating[QuestionRatingCriteria.NATURALNESS] = QuestionRatingValue.NA
+                        rating[QuestionRatingCriteria.VALIDITY] = QuestionRatingValue.NA
+                        rating[QuestionRatingCriteria.SPECIFICITY] = QuestionRatingValue.NA
 
                 assignment = CrowdSourcingAssignment(generated_question,
                                                      rating,
