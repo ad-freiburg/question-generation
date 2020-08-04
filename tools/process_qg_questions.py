@@ -39,7 +39,7 @@ def clean_question(line, exclude_stopwords, tokenizer=RegexpTokenizer(tok)):
 
 
 def adjust_type(typ):
-    if typ == "" or typ == "unknown" or typ == "unknown/unknown":
+    if typ == "" or typ == "unknown" or typ == "unknown/unknown" or typ == "unknown_unknown/unknown_unknown":
         logger.debug("no type.")
         typ = "unknown"
     typ = typ.replace(" ", "_")
