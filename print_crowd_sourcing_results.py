@@ -3,7 +3,7 @@ from tools.crowd_sourcing_assignment import CrowdSourcingAssignment
 
 
 def main(args):
-    for assignment in CrowdSourcingAssignment.assignment_reader(args.input_file, False):
+    for assignment in CrowdSourcingAssignment.assignment_reader(args.input_file, False, args.ignore_workers):
         if args.worker_id and assignment.worker_id != args.worker_id:
             continue
         if args.question_id and assignment.question.question_id != args.question_id:
@@ -30,5 +30,8 @@ if __name__ == "__main__":
 
     parser.add_argument("--question_id", type=str, default=None,
                         help="If provided, only assignments for the given question are displayed")
+
+    parser.add_argument("-ign", "--ignore_workers", type=str, default=None, nargs="+",
+                        help="List of worker IDs which will be skipped in the evaluation.")
 
     main(parser.parse_args())
