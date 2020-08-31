@@ -12,7 +12,7 @@ def main(args):
         print(assignment.question.question)
         print(assignment.question.answer)
         print("---")
-        for criteria, value in assignment.rating.items():
+        for criteria, value in sorted(assignment.rating.items()):
             print("%s:\t%s" % (criteria.name, value.name))
         print("---")
         print("method: %s\tquestion id: %s\tworker id: %s\twork time: %ds" %
