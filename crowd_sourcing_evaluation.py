@@ -3,9 +3,9 @@ from tools.crowd_sourcing_assignment import CrowdSourcingAssignment
 from tools.question_rating import QuestionRatingValue
 
 
-def get_results_by_method(input_file):
+def get_results_by_method(input_file, ignore_workers):
     results = dict()
-    for assignment in CrowdSourcingAssignment.assignment_reader(input_file, False):
+    for assignment in CrowdSourcingAssignment.assignment_reader(input_file, False, ignore_workers):
         if assignment.question.method not in results:
             results[assignment.question.method] = dict()
         for criteria, value in sorted(assignment.rating.items()):
@@ -16,9 +16,9 @@ def get_results_by_method(input_file):
     return results
 
 
-def get_results_by_question(input_file):
+def get_results_by_question(input_file, ignore_workers):
     results = dict()
-    for assignment in CrowdSourcingAssignment.assignment_reader(input_file, False):
+    for assignment in CrowdSourcingAssignment.assignment_reader(input_file, False, ignore_workers):
         if assignment.question.question_id not in results:
             results[assignment.question.question_id] = dict()
         for criteria, value in sorted(assignment.rating.items()):
@@ -44,36 +44,42 @@ def print_results(results):
             num_no = len([r.value for r in ratings if r == QuestionRatingValue.NO])
             num_na = len([r.value for r in ratings if r == QuestionRatingValue.NA])
             num_none = len([r.value for r in ratings if r == QuestionRatingValue.NONE_SELECTED])
-            print("\t%s:\t%f\t%d x %s\t%d x %s\t%d x %s\t%d x %s\t%d x %s"
+            num_total = len(ratings)
+            print("\t%s:\t%f\t%d x %s\t%d x %s\t%d x %s\t%d x %s\t%d x %s\t(%d TOTAL)"
                   % (criteria.name, sum(scores) / len(scores), num_yes, QuestionRatingValue.YES.name,
                      num_borderline, QuestionRatingValue.BORDERLINE.name, num_no, QuestionRatingValue.NO.name,
-                     num_na, QuestionRatingValue.NA.name, num_none, QuestionRatingValue.NONE_SELECTED.name))
+                     num_na, QuestionRatingValue.NA.name, num_none, QuestionRatingValue.NONE_SELECTED.name, num_total))
         print()
 
 
 def print_inter_rater_agreement(results):
     print("*" * 100)
     print("Inter-rater agreement")
-    print("Percentage of questions that received both \"yes\" and \"no\" answers")
+    print("Percentage of questions with more than one answer that received both \"yes\" and \"no\" answers")
     print("*" * 100)
     rater_disagreements = dict()
+    multi_answers = dict()
     for question_id, result in sorted(results.items()):
         for criteria, ratings in sorted(result.items()):
-            if QuestionRatingValue.NO in ratings and QuestionRatingValue.YES in ratings:
-                if criteria not in rater_disagreements:
-                    rater_disagreements[criteria] = 0
-                rater_disagreements[criteria] += 1
+            if len(ratings) > 1:
+                if criteria not in multi_answers:
+                    multi_answers[criteria] = 0
+                multi_answers[criteria] += 1
+                if QuestionRatingValue.NO in ratings and QuestionRatingValue.YES in ratings:
+                    if criteria not in rater_disagreements:
+                        rater_disagreements[criteria] = 0
+                    rater_disagreements[criteria] += 1
 
     for criteria, num_disagreements in sorted(rater_disagreements.items()):
-        percentage = num_disagreements / len(results) * 100
+        percentage = num_disagreements / multi_answers[criteria] * 100
         print("%s: %.2f%% (%d/%d)"
-              % (criteria.name, percentage, num_disagreements, len(results)))
+              % (criteria.name, percentage, num_disagreements, multi_answers[criteria]))
 
 
 def main(args):
-    results_by_method = get_results_by_method(args.input_file)
+    results_by_method = get_results_by_method(args.input_file, args.ignore_workers)
     print_results(results_by_method)
-    results_by_question = get_results_by_question(args.input_file)
+    results_by_question = get_results_by_question(args.input_file, args.ignore_workers)
     print_inter_rater_agreement(results_by_question)
 
 
@@ -82,5 +88,8 @@ if __name__ == "__main__":
 
     parser.add_argument("-i", "--input_file", type=str, default=None,
                         help="Input csv file as provided by Amazon MTurk.")
+
+    parser.add_argument("-ign", "--ignore_workers", type=str, default=None, nargs="+",
+                        help="List of worker IDs which will be skipped in the evaluation.")
 
     main(parser.parse_args())

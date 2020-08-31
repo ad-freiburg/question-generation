@@ -1,4 +1,4 @@
-from typing import Iterator, Dict
+from typing import Iterator, Dict, Optional, List
 
 import csv
 
@@ -18,10 +18,19 @@ class CrowdSourcingAssignment:
         self.work_time = work_time
 
     @staticmethod
-    def assignment_reader(assignment_file: str, adjust_to_na: bool) -> Iterator["CrowdSourcingAssignment"]:
+    def assignment_reader(assignment_file: str, adjust_to_na: bool, ignore_workers: Optional[List[str]]) \
+            -> Iterator["CrowdSourcingAssignment"]:
+        if ignore_workers is None:
+            ignore_workers = set()
+        else:
+            ignore_workers = set(ignore_workers)
+
         with open(assignment_file) as csv_file:
             csv_reader = csv.DictReader(csv_file, delimiter=',')
             for row in csv_reader:
+                if row["WorkerId"] in ignore_workers:
+                    continue
+
                 generated_question = GeneratedQuestion(row["Input.question"],
                                                        row["Input.answer"],
                                                        row["Input.paragraph"],
