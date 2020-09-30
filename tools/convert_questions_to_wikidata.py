@@ -163,7 +163,7 @@ def main(args):
     num_questions = 0
     no_mapping_counter = 0
     out_file = open(args.output_file, "w", encoding="latin-1")
-    with open(args.fq_file, "r", encoding="latin-1") as file:
+    with open(args.input_file, "r", encoding="latin-1") as file:
         for line in file:
             line = line
             if args.clueweb:
@@ -189,10 +189,10 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--question_file", type=str, required=True,
-                        help="FQ File containing filtered questions")
+    parser.add_argument("-i", "--input_file", type=str, required=True,
+                        help="File containing questions")
 
-    parser.add_argument("--output_file", type=str, required=True,
+    parser.add_argument("-o", "--output_file", type=str, required=True,
                         help="Output file")
 
     parser.add_argument("--clueweb", default=False, action="store_true",

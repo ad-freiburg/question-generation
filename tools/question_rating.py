@@ -21,6 +21,9 @@ class QuestionRatingValue(Enum):
         else:
             raise ValueError("Question Rating Value %s not known" % string)
 
+    def __lt__(self, other):
+        return self.value < other.value
+
 
 class QuestionRatingCriteria(Enum):
     GRAMMAR = 0
