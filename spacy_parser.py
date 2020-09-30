@@ -10,6 +10,8 @@ import en_core_web_md
 from entity import Entity
 
 # Set up the logger
+from tools.custom_sentencizer import CustomSentencizer
+
 logging.basicConfig(format='%(asctime)s: %(message)s', datefmt="%H:%M:%S", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -243,8 +245,9 @@ class SpacyParser:
         except AssertionError:
             logger.debug("Skipping line due to AssertionError: %s" % sent)
             return
-
-        if not self.spacy_sent_tokenizer:
+        if self.spacy_sent_tokenizer:
+            doc = CustomSentencizer.set_custom_boundaries(doc)
+        else:
             doc = set_sent_starts(doc)
 
         self.nlp.tagger(doc)
