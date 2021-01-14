@@ -20,11 +20,12 @@ class EvaluationCriteria:
 
 evaluation_criteria = (EvaluationCriteria("grammar", "Grammatically correct?"),
                        EvaluationCriteria("naturalness", "Does the question sound natural?"),
-                       EvaluationCriteria("context", "Is it clear what the question refers to - is necessary context given?"),
-                       EvaluationCriteria("answerability", "Is the question specific enough to be theoretically answerable?"),
+                       EvaluationCriteria("meaningfulness", "Is the question understandable and meaningful?"),
+                       EvaluationCriteria("answerability", "Is the question specific enough to be answerable without NERD?"),
+                       EvaluationCriteria("answerability_nerd", "Is the question specific enough to be answerable with NERD?"),
                        EvaluationCriteria("question_word", "Is the question word correct?"),
-                       EvaluationCriteria("nerd_question", "If entities in the question are replaced by their text & meaning, is the meaning preserved (or clarified)?"),
-                       EvaluationCriteria("nerd_answer", "If entities in the answer are replaced by their text & meaning, is the meaning preserved (or clarified)?"))
+                       EvaluationCriteria("nerd_question", "If entities in the question are replaced by their label & meaning, is the meaning preserved (or clarified)?"),
+                       EvaluationCriteria("nerd_answer", "If entities in the answer are replaced by their label & meaning, is the meaning preserved (or clarified)?"))
 
 
 def to_dict(question: GeneratedQuestion, results: List[Tuple[str, QuestionRatingValue]]) -> Dict:
