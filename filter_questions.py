@@ -639,7 +639,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--debug", default=False, action="store_true",
                         help="Print additional information for debugging.")
-    parser.add_argument("--wikidata", default=False, action="store_true",
+    parser.add_argument("-wd", "--wikidata", default=False, action="store_true",
                         help="Entities in input sentences are from Wikidata")
     parser.add_argument("-f", "--filter_file", default="", type=str,
                         help="File path to which filtered out questions and the corresponding filter are written")
