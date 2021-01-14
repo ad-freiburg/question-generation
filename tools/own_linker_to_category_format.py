@@ -59,7 +59,11 @@ def convert(line):
         qid_string = m.group(1)
         # "|" in original words will cause problems since it is used as separator in entity tags
         original = m.group(2).replace("|", " ")
+        label = ""
         qid_end_idx = qid_string.find(";")
+        if qid_end_idx < 0:
+            qid_end_idx = qid_string.find(":")
+            label = qid_string[qid_end_idx + 1:]
         qid = qid_string[:qid_end_idx]
         category = "unknown"
         if qid in qid_to_category:
@@ -69,7 +73,6 @@ def convert(line):
             category = primary + "/" + secondary
             if primary == secondary and secondary == "unknown":
                 category = "unknown"
-        label = ""
         if qid in qid_to_label:
             label = qid_to_label[qid]
         name = qid + ":" + label
