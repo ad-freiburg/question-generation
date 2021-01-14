@@ -115,7 +115,10 @@ def main(args):
 
     # Print evaluation summary
     method2results = OwnEvaluationSummarizer.get_method2results(QuestionRatingReader.read_from_file(args.output_file))
-    OwnEvaluationSummarizer.print_evaluation_summary(method2results)
+    perfect_questions = OwnEvaluationSummarizer.get_perfect_questions(
+        QuestionRatingReader.read_from_file(args.output_file))
+    OwnEvaluationSummarizer.print_evaluation_summary(method2results, perfect_questions)
+
 
 
 if __name__ == "__main__":
